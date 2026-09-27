@@ -8,7 +8,7 @@
 
 ---
 
-## 1. วัตถุประสงค์และขอบเขตโครงการ (Project Purpose & Scope)
+### 1. วัตถุประสงค์และขอบเขตโครงการ (Project Purpose & Scope)
 
 ย้ายระบบประมวลผลจากเดิมที่รันบน Local/Google Colab ขึ้นสู่ระบบอัตโนมัติบน Cloud 100% แบบ Headless (ไม่มี UI) สามารถรันประมวลผลเบื้องหลังได้ตามรอบเวลาที่กำหนด (Cron Job) และรันผ่านคำสั่ง CLI โดยมีขอบเขตการทำงานใน Sprint 2 ดังนี้:
 
@@ -20,7 +20,7 @@
 
 ---
 
-## 2. สถาปัตยกรรมระบบ (Modular Architecture & Separation of Concerns)
+### 2. สถาปัตยกรรมระบบ (Modular Architecture & Separation of Concerns)
 
 โครงสร้างระบบถูกปรับปรุงให้รองรับการทำงานบน Cloud API และ Headless Execution แบบแยกชั้นหน้าที่ (Layered Architecture):
 
@@ -51,7 +51,7 @@
 
 ---
 
-## 3. นิยามความเสร็จสมบูรณ์ของงาน (Definition of Done - DoD)
+### 3. นิยามความเสร็จสมบูรณ์ของงาน (Definition of Done - DoD)
 
 งานใน Sprint 2 ถือว่าเสร็จสมบูรณ์ (Done) เมื่อผ่านเกณฑ์ต่อไปนี้ทุกข้อ:
 
@@ -64,32 +64,35 @@
 
 ---
 
-## 4. แผนการจัดสรรหน้าที่และบทบาทภายในทีม (Team Roles & Responsibilities)
+### 4. แผนการจัดสรรหน้าที่และบทบาทภายในทีม (Team Roles & Responsibilities)
 
 | บทบาท (Role) | สมาชิกที่รับผิดชอบ | ภารกิจหลักใน Sprint 2 |
 | --- | --- | --- |
 | **Planner / Team Leader** | น่อน | • ออกแบบสถาปัตยกรรมระบบ Cloud API และระบบความปลอดภัย (Token Encryption)<br>• ออกแบบโครงสร้าง CI/CD Workflow (`auto_rename.yml`) และจัดการ GitHub Secrets<br>• จัดทำเอกสารสรุปแผนงานและสอบทานโครงสร้างภาพรวม |
-| **Coder** | ฟลุ๊ค | • พัฒนา Data Access Layer (`sheets_db.py`, `drive_service.py`, `email_gateway.py`)<br>• พัฒนา Business Logic Layer (`security.py`, `renamer_service.py`, `pipeline.py`)<br>• เขียนจุดเชื่อมต่อ CLI (`main.py`) สำหรับ GitHub Actions |
+| **Coder** | ฟลุ๊ค | • พัฒนา Data Access Layer (<br>`sheets_db.py`,<br>`drive_service.py`,<br> `email_gateway.py`)<br>• พัฒนา Business Logic Layer (<br>`security.py`,<br>`renamer_service.py`,<br>`pipeline.py`)<br>• เขียนจุดเชื่อมต่อ CLI (`main.py`) สำหรับ GitHub Actions |
 | **Debugger / QA** | น่อน | • ทดสอบการรัน CI/CD บน GitHub Actions Runner (Ubuntu Linux)<br>• แก้ไขข้อผิดพลาดของ OS Dependencies, Import Path, และ Directory Context<br>• สอบทานความเสถียรของระบบการอ่าน Multiline Secrets และ EasyOCR Model Caching |
 
 ---
 
-## 5. ผลการทดสอบระบบและตารางขอบเขตระบบ (QA Testing & Edge Cases Results)
+### 5. ผลการทดสอบระบบและตารางขอบเขตระบบ (QA Testing & Edge Cases Results)
 
 ผู้ทดสอบ (น่อน - Debugger / QA) ได้ทำการทดสอบรัน Workflow บน **GitHub Actions (Ubuntu Runner)** และระบบส่วนหน้า CLI ตามขอบเขตงานใน Sprint 2 โดยมีผลการทดสอบดังนี้:
 
 | ลำดับ | กรณีทดสอบ (Test Case) | อินพุตนำเข้า (Test Input) | พฤติกรรมที่คาดหวัง vs ผลการทดสอบจริง | สถานะ (Status) |
 | --- | --- | --- | --- | --- |
-| **1** | **Linux System Dependencies** | Runner: `ubuntu-latest` | ติดตั้ง `libgl1` และ `libglib2.0-0` ทดแทนแพ็กเกจเก่า (`libgl1-mesa-glx`) แก้ปัญหา `exit code 100` ทำให้ OpenCV/EasyOCR ทำงานบน Linux ได้สมบูรณ์ | **PASSED** |
-| **2** | **Working Directory Context** | `.github/workflows/auto_rename.yml` | กำหนด `working-directory: rockspec-ocr` ช่วยให้ Runner มองเห็น `requirements.txt` และ `main.py` จากโฟลเดอร์ย่อยได้อย่างถูกต้อง | **PASSED** |
-| **3** | **Automated Unit Testing** | คำสั่ง `python -m pytest` | ติดตั้ง `pytest` ในสเต็ปการสร้าง Environment รัน Unit Test ผ่านก่อนเข้าสู่ Pipeline จริง ช่วยป้องกันคลังโค้ดพัง | **PASSED** |
-| **4** | **Python Import Path Mismatch** | คำสั่ง `pytest` ใน CI | กำหนด `PYTHONPATH: .` เพื่อให้ `pytest` ค้นพบโมเดลภายในโฟลเดอร์ `src/` แก้ปัญหา `ModuleNotFoundError: No module named 'src'` | **PASSED** |
-| **5** | **Multiline Secrets Handling** | `GCP_SERVICE_ACCOUNT_KEY` | อ่านค่า JSON Key จาก Environment Variable โดยตรงในรูปแบบ Multiline ได้โดยไม่ต้องสร้างไฟล์ดิสก์ ปลอดภัยและรันผ่าน 100% | **PASSED** |
-| **6** | **EasyOCR Model Caching** | สเต็ป `actions/cache@v4` | ทำการบันทึกพาธ `~/.EasyOCR` ลง Runner Cache ป้องกันการดาวน์โหลด CRAFT Model ใหม่ทุกรอบ ช่วยลดเวลาประมวลผล | **PASSED** |
+| **1** | **Google Sheets DB & Batch Operations** | `sheets_db.py` (Users, Transactions_Log, OTP_Store) | อ่านข้อมูลแบบ `get_all_records()` และเขียนแบบ `append_rows()` สำเร็จ ระบบประมวลผลราบรื่นโดยไม่ติดปัญหา API Rate Limit (60 req/min) | **PASSED** |
+| **2** | **In-Memory Stream & Drive Dual-Key** | `drive_service.py` (`file_id`, `name`) | สกัดไฟล์ภาพเข้า `io.BytesIO` เพื่อประมวลผล OCR และเปลี่ยนชื่อไฟล์ผ่าน `file_id` บน Google Drive ได้โดยไม่ต้องเขียนไฟล์ลงดิสก์ | **PASSED** |
+| **3** | **Token Encryption & Safety** | `security.py` + `MASTER_ENCRYPTION_KEY` | ถอดรหัส Refresh Token ของผู้ใช้ผ่าน `Fernet` ได้ถูกต้อง และสามารถอ่าน `GCP_SERVICE_ACCOUNT_KEY` แบบ Multiline JSON จาก Environment Variable เข้า Memory ได้โดยตรง | **PASSED**<br> |
+| **4** | **External Rename Tracking** | `renamer_service.py` (ไฟล์ที่ `file_id` ตรงกัน แต่ `name` บน Drive เปลี่ยนไป) | ระบบตรวจจับได้ว่าไฟล์ถูกเปลี่ยนชื่อจากภายนอก จึงทำการ Flag สถานะ `EXTERNAL_RENAMED` ลงใน `Transactions_Log` ก่อนแมปชื่อใหม่ได้ถูกต้อง | **PASSED** |
+| **5** | **CLI Entrypoint & Dry-Run** | `python main.py --all_users --dry_run` และ `--user_email` | สคริปต์สแกนผู้ใช้ตามอาร์กิวเมนต์ที่ระบุ และจำลองการประมวลผลโดยไม่มีการเปลี่ยนชื่อไฟล์จริงบน Google Drive เมื่อเปิดโหมด `--dry_run` | **PASSED** |
+| **6** | **Linux System Dependencies Compatibility** | Runner: `ubuntu-latest` | อัปเดตแพ็กเกจใน Workflow เป็น `libgl1` และ `libglib2.0-0` ทดแทน `libgl1-mesa-glx` ที่ตกรุ่น แก้ไขปัญหา Build Error (`exit code 100`) ทำให้ OpenCV/EasyOCR ทำงานบน Linux ได้สำเร็จ | **PASSED**<br> |
+| **7** | **Working Directory & Python Import Path** | `.github/workflows/auto_rename.yml` | กำหนด `working-directory: rockspec-ocr` และใส่ `PYTHONPATH: .` ในขั้นตอน `pytest` แก้ปัญหาหา `requirements.txt` ไม่เจอ และปัญหา `ModuleNotFoundError: No module named 'src'`<br> | **PASSED**<br> |
+| **8** | **Secrets Integration & Automated Tests** | GitHub Repository Secrets | เพิ่ม `pytest` ในขั้นตอนติดตั้ง Dependencies และดึงค่า Secrets ทั้ง 6 ตัวเข้า Environment Variable ได้ครบถ้วน แก้ปัญหา `[CRITICAL ERROR] ไม่พบ GCP_SERVICE_ACCOUNT_KEY`<br> | **PASSED**<br> |
+| **9** | **EasyOCR Model Caching Optimization** | สเต็ป `actions/cache@v4` ที่ `~/.EasyOCR` | ระบบทำการบันทึก Cache ของ CRAFT Detection Model ไว้ ทำให้การรันรอบถัดไปไม่ต้องดาวน์โหลดโมเดลใหม่ ช่วยลดเวลาการทำงานของ Runner อย่างมีประสิทธิภาพ | **PASSED**<br> |
 
 ---
 
-## 6. สรุปบทเรียนประจำ Sprint (Sprint Retrospective)
+### 6. สรุปบทเรียนประจำ Sprint (Sprint Retrospective)
 
 ### 🌟 Wow! (จุดเด่นที่ทำได้ดีมาก)
 
