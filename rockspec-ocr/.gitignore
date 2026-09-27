@@ -1,0 +1,25 @@
+# Virtual Environment
+venv/
+.venv/
+env/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment Variables & Secrets (สำคัญมาก!)
+.env
+*.json
+!example.json  # ยกเว้นไฟล์ตัวอย่างถ้ามี
+credentials/
+tokens/
+
+# OS & IDE Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Output/Temporary Data
+*.log

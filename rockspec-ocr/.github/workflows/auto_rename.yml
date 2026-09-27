@@ -1,0 +1,68 @@
+name: RockSpec OCR Automated Batch Processing
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # รันทุกๆ 6 ชั่วโมง
+  workflow_dispatch:
+    inputs:
+      user_email:
+        description: 'ระบุ Email ผู้ใช้ที่ต้องการทดสอบรันเฉพาะรายบุคคล (ปล่อยว่างหากต้องการรันทุกคน)'
+        required: false
+        default: ''
+      dry_run:
+        description: 'โหมดจำลองการทำงาน Dry-Run (true/false)'
+        required: false
+        default: 'false'
+
+concurrency:
+  group: rockspec-ocr-pipeline
+  cancel-in-progress: false
+
+jobs:
+  batch-processing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: 📥 Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: 📦 Install System Dependencies & OpenCV Libs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-glx libglib2.0-0
+
+      - name: 🚀 Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 🧪 Run Automated Unit Tests
+        run: |
+          pytest
+
+      - name: 🗿 Execute RockSpec OCR Batch Pipeline
+        env:
+          GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          MASTER_ENCRYPTION_KEY: ${{ secrets.MASTER_ENCRYPTION_KEY }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          EXTRA_ARGS=""
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            EXTRA_ARGS="$EXTRA_ARGS --dry_run"
+          fi
+          
+          if [ -n "${{ github.event.inputs.user_email }}" ]; then
+            python main.py --user_email "${{ github.event.inputs.user_email }}" $EXTRA_ARGS
+          else
+            python main.py --all_users $EXTRA_ARGS
+          fi
