@@ -48,8 +48,10 @@ jobs:
           pip install -r requirements.txt pytest
 
       - name: 🧪 Run Automated Unit Tests
+        env:
+          PYTHONPATH: .
         run: |
-          pytest
+          python -m pytest
 
       - name: 🗿 Execute RockSpec OCR Batch Pipeline
         env:
