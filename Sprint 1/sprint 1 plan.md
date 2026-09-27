@@ -1,4 +1,4 @@
-# เอกสารแผนงาน สถาปัตยกรรม และรายงานผลการทดสอบประจำ Sprint 1
+## เอกสารแผนงาน สถาปัตยกรรม และรายงานผลการทดสอบประจำ Sprint 1
 
 **ชื่อโปรเจกต์:** ระบบประมวลผลและเปลี่ยนชื่อไฟล์ภาพถ่ายกล้องจุลทรรศน์อิเล็กตรอนอัตโนมัติ (SEM Rock Image Renamer)
 
@@ -8,7 +8,7 @@
 
 ---
 
-## 1. วัตถุประสงค์และขอบเขตโครงการ (Project Purpose & Scope)
+### 1. วัตถุประสงค์และขอบเขตโครงการ (Project Purpose & Scope)
 
 ในการวิเคราะห์ตัวอย่างหินด้วยกล้องจุลทรรศน์อิเล็กตรอนแบบส่องกราด (SEM) ไฟล์ภาพถ่ายที่ส่งออกจากเครื่องมักมีชื่อไฟล์เป็นรหัสตัวเลขดิบที่ยากต่อการสืบค้น และข้อมูลสเปกตรัม/กำลังขยายจะกระจัดกระจายอยู่ในตารางบันทึกการทดลอง (Excel)
 
@@ -20,7 +20,7 @@
 
 ---
 
-## 2. สถาปัตยกรรมระบบ (Modular Architecture & Separation of Concerns)
+### 2. สถาปัตยกรรมระบบ (Modular Architecture & Separation of Concerns)
 
 โปรแกรมถูกออกแบบแยกหน้าที่เป็น 3 โมดูลหลัก ตามหลักการออกแบบเชิงซอฟต์แวร์ (Separation of Concerns):
 
@@ -35,17 +35,17 @@
                                    ▼
 ┌────────────────────────────────────────────────────────────────────────┐
 │                    MODULE 2: IMAGE PRE-PROCESSING & OCR                │
-│  - Dynamic Relative Crop Box (คำนวณตำแหน่ง % ตาม Resolution ภาพ)        │
+│  - Dynamic Relative Crop Box (คำนวณตำแหน่ง % ตาม Resolution ภาพ)       │
 │  - Color Space Conversion (RGBA/RGB -> Grayscale)                      │
-│  - Otsu Thresholding & Erosion (ลด Noise และปรับ Contrast อัตโนมัติ)     │
-│  - EasyOCR Engine (ดึงตัวเลขและสัญลักษณ์กำลังขยาย)                       │
+│  - Otsu Thresholding & Erosion (ลด Noise และปรับ Contrast อัตโนมัติ)      │
+│  - EasyOCR Engine (ดึงตัวเลขและสัญลักษณ์กำลังขยาย)                         │
 └──────────────────────────────────┬─────────────────────────────────────┘
                                    │
                                    ▼
 ┌────────────────────────────────────────────────────────────────────────┐
 │                    MODULE 3: BUSINESS LOGIC & EXECUTION                │
-│  - Mapping Engine (คีย์ร่วม: Date + ID)                                 │
-│  - Naming & Counter Engine (นับลำดับ Point และ Zoom อัตโนมัติ)         │
+│  - Mapping Engine (คีย์ร่วม: Date + ID)                                   │
+│  - Naming & Counter Engine (นับลำดับ Point และ Zoom อัตโนมัติ)             │
 │  - Safe Dry-Run Mode & Interactive HTML Renderer (UI)                  │
 └────────────────────────────────────────────────────────────────────────┘
 
@@ -53,7 +53,7 @@
 
 ---
 
-## 3. นิยามความเสร็จสมบูรณ์ของงาน (Definition of Done - DoD)
+### 3. นิยามความเสร็จสมบูรณ์ของงาน (Definition of Done - DoD)
 
 งานใน Sprint 1 จะถือว่าเสร็จสมบูรณ์ (Done) เมื่อผ่านเกณฑ์ต่อไปนี้ทุกข้อ:
 
@@ -66,7 +66,7 @@
 
 ---
 
-## 4. แผนการจัดสรรหน้าที่และบทบาทภายในทีม (Team Roles & Responsibilities)
+### 4. แผนการจัดสรรหน้าที่และบทบาทภายในทีม (Team Roles & Responsibilities)
 
 | บทบาท (Role) | สมาชิกที่รับผิดชอบ | ภารกิจหลักใน Sprint 1 |
 | --- | --- | --- |
@@ -75,7 +75,7 @@
 | **Debugger / QA** | ฟลุ๊ค | • ออกแบบตารางทดสอบ Edge Cases (ภาพต่างความละเอียด, ข้อมูลไม่ครบ)<br>• สอบทานโครงสร้าง Exception Handling ป้องกันโปรแกรมค้าง<br>• จัดทำรายงานผลการทดสอบและ Retrospective (Wow! & Whoops!) |
 ---
 
-## 5. ผลการทดสอบระบบและตารางขอบเขตระบบ (QA Testing & Edge Cases Results)
+### 5. ผลการทดสอบระบบและตารางขอบเขตระบบ (QA Testing & Edge Cases Results)
 
 ผู้ทดสอบ (ฟลุ๊ค - Debugger / QA) ได้ทำการรันทดสอบชุดโค้ด `run_renamer_sprint1` บนสภาพแวดล้อม **Google Colab** ตามตาราง Edge Cases ทั้งหมด 5 กรณีที่กำหนดไว้ในเอกสาร `PLAN.md` โดยผลการทดสอบเป็นไปตามข้อกำหนดดังนี้:
 
@@ -89,7 +89,7 @@
 
 ---
 
-## 6. สรุปบทเรียนประจำ Sprint (Sprint Retrospective)
+### 6. สรุปบทเรียนประจำ Sprint (Sprint Retrospective)
 
 ### 🌟 Wow! (จุดเด่นที่ทำได้ดีมาก)
 
