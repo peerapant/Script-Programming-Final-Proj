@@ -47,6 +47,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt pytest
 
+      - name: 💾 Cache EasyOCR Models
+        uses: actions/cache@v4
+        with:
+          path: ~/.EasyOCR
+          key: ${{ runner.os }}-easyocr-models
+
       - name: 🧪 Run Automated Unit Tests
         env:
           PYTHONPATH: .
