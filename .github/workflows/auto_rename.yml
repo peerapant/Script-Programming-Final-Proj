@@ -2,7 +2,7 @@ name: RockSpec OCR Automated Batch Processing
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # รันทุกๆ 6 ชั่วโมง
+    - cron: '0 0 * * *' # รันทุกวัน เวลา 07:00 น. (เช้าเวลาไทย)
   workflow_dispatch:
     inputs:
       user_email:
