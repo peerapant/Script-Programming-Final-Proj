@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 import gspread
 from google.oauth2.service_account import Credentials
@@ -45,13 +45,16 @@ class GoogleSheetsDB:
 
     def append_transaction_logs_batch(self, logs: List[Dict[str, Any]]):
         """บันทึก Log แบบ Batch (append_rows) ป้องกัน Rate Limit"""
+
+        thailand_tz = timezone(timedelta(hours=7))
         if not logs:
             return
         ws = self.spreadsheet.worksheet("Transactions_Log")
         rows_to_insert = [
             [
-                log.get("Timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+                log.get("Timestamp", datetime.now(thailand_tz).strftime("%Y-%m-%d %H:%M:%S")),
                 log.get("User_Email", ""),
+                log.get("Subfolder_Name", ""),
                 log.get("Drive_File_ID", ""),
                 log.get("Original_Name", ""),
                 log.get("New_Name", ""),
@@ -62,11 +65,14 @@ class GoogleSheetsDB:
         ]
         ws.append_rows(rows_to_insert)
 
-    def flag_external_renamed(self, file_id: str, current_drive_name: str, email: str):
+    def flag_external_renamed(self, file_id: str, subfolder_Name: str, current_drive_name: str, email: str):
         """บันทึก Flag เมื่อพบว่าชื่อบน Drive ไม่ตรงกับ Log ล่าสุด"""
+
+        thailand_tz = timezone(timedelta(hours=7))
         log = [{
-            "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "Timestamp": datetime.now(thailand_tz).strftime("%Y-%m-%d %H:%M:%S"),
             "User_Email": email,
+            "Subfolder_Name": subfolder_Name,
             "Drive_File_ID": file_id,
             "Original_Name": current_drive_name,
             "New_Name": current_drive_name,
