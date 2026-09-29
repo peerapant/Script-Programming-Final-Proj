@@ -14,7 +14,7 @@ class WebhookNotifier:
 
         payload = {
             "embeds": [{
-                "title": f"🗿 RockSpec OCR: {title}",
+                "title": f"RockSpec OCR: {title}",
                 "description": summary,
                 "color": 3066993 if status == "SUCCESS" else 15158332,
                 "timestamp": datetime.utcnow().isoformat()
