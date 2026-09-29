@@ -68,15 +68,15 @@
 
 | บทบาท (Role) | สมาชิกที่รับผิดชอบ | ภารกิจหลักใน Sprint 2 |
 | --- | --- | --- |
-| **Planner / Team Leader** | น่อน | • ออกแบบสถาปัตยกรรมระบบ Cloud API และระบบความปลอดภัย (Token Encryption)<br>• ออกแบบโครงสร้าง CI/CD Workflow (`auto_rename.yml`) และจัดการ GitHub Secrets<br>• จัดทำเอกสารสรุปแผนงานและสอบทานโครงสร้างภาพรวม |
-| **Coder** | ฟลุ๊ค | • พัฒนา Data Access Layer (<br>`sheets_db.py`,<br>`drive_service.py`,<br> `email_gateway.py`)<br>• พัฒนา Business Logic Layer (<br>`security.py`,<br>`renamer_service.py`,<br>`pipeline.py`)<br>• เขียนจุดเชื่อมต่อ CLI (`main.py`) สำหรับ GitHub Actions |
-| **Debugger / QA** | น่อน | • ทดสอบการรัน CI/CD บน GitHub Actions Runner (Ubuntu Linux)<br>• แก้ไขข้อผิดพลาดของ OS Dependencies, Import Path, และ Directory Context<br>• สอบทานความเสถียรของระบบการอ่าน Multiline Secrets และ EasyOCR Model Caching |
+| **Planner / Team Leader** | พีรพล พรหมมิ | • ออกแบบสถาปัตยกรรมระบบ Cloud API และระบบความปลอดภัย (Token Encryption)<br>• ออกแบบโครงสร้าง CI/CD Workflow (`auto_rename.yml`) และจัดการ GitHub Secrets<br>• จัดทำเอกสารสรุปแผนงานและสอบทานโครงสร้างภาพรวม |
+| **Coder** | ธนธรณ์ ผาลัง | • พัฒนา Data Access Layer (<br>`sheets_db.py`,<br>`drive_service.py`,<br> `email_gateway.py`)<br>• พัฒนา Business Logic Layer (<br>`security.py`,<br>`renamer_service.py`,<br>`pipeline.py`)<br>• เขียนจุดเชื่อมต่อ CLI (`main.py`) สำหรับ GitHub Actions |
+| **Debugger / QA** | พีรพล พรหมมิ | • ทดสอบการรัน CI/CD บน GitHub Actions Runner (Ubuntu Linux)<br>• แก้ไขข้อผิดพลาดของ OS Dependencies, Import Path, และ Directory Context<br>• สอบทานความเสถียรของระบบการอ่าน Multiline Secrets และ EasyOCR Model Caching |
 
 ---
 
 ### 5. ผลการทดสอบระบบและตารางขอบเขตระบบ (QA Testing & Edge Cases Results)
 
-ผู้ทดสอบ (น่อน - Debugger / QA) ได้ทำการทดสอบรัน Workflow บน **GitHub Actions (Ubuntu Runner)** และระบบส่วนหน้า CLI ตามขอบเขตงานใน Sprint 2 โดยมีผลการทดสอบดังนี้:
+ผู้ทดสอบ (พีรพล - Debugger / QA) ได้ทำการทดสอบรัน Workflow บน **GitHub Actions (Ubuntu Runner)** และระบบส่วนหน้า CLI ตามขอบเขตงานใน Sprint 2 โดยมีผลการทดสอบดังนี้:
 
 | ลำดับ | กรณีทดสอบ (Test Case) | อินพุตนำเข้า (Test Input) | พฤติกรรมที่คาดหวัง vs ผลการทดสอบจริง | สถานะ (Status) |
 | --- | --- | --- | --- | --- |
