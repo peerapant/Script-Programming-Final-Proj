@@ -16,6 +16,7 @@ load_dotenv()
 # 3. Local Application Imports (โมดูลในโปรเจกต์นี้)
 from src.drive_service import GoogleDriveService
 from src.email_gateway import EmailGateway
+from src.notifier import WebhookNotifier
 from src.pipeline import RockSpecCloudPipeline
 from src.sheets_db import GoogleSheetsDB
 
@@ -69,8 +70,31 @@ def main():
         return
 
     print(f"พบผู้ใช้งานที่จะประมวลผลทั้งหมด: {len(target_users)} รายการ")
+    
+    # เก็บผลสรุปเฉพาะผู้ใช้ที่มีไฟล์เข้ากระบวนการประมวลผลจริง
+    active_user_results = []
     for user in target_users:
-        pipeline.process_user(user, dry_run=args.dry_run)
+        summary = pipeline.process_user(user, dry_run=args.dry_run)
+        if summary and summary.get("active_folders_count", 0) > 0:
+            active_user_results.append(summary)
+
+    # ส่งการแจ้งเตือนสรุปภาพรวมทั้งหมดไปยัง Discord
+    if discord_webhook:
+        notifier = WebhookNotifier(discord_webhook)
+        if active_user_results:
+            lines = [f"ประมวลผลผู้ใช้ {len(active_user_results)} บัญชี"]
+            for idx, res in enumerate(active_user_results, 1):
+                lines.append(f"{idx}. บัญชีผู้ใช้ {res['email']}")
+                lines.append(
+                    f"ประมวลผล {res['active_folders_count']} โฟลเดอร์ "
+                    f"สำเร็จ {res['success_count']} รายการ "
+                    f"ไม่สำเร็จ {res['failed_count']} รายการ"
+                )
+            summary_msg = "\n".join(lines)
+            notifier.send_notification(title="Batch Processing Summary", summary=summary_msg)
+        else:
+            summary_msg = "ไม่พบไฟล์ใหม่ที่ต้องประมวลผลสำหรับผู้ใช้งานทุกบัญชี (ทุกโฟลเดอร์เปลี่ยนชื่อเสร็จสิ้นแล้ว)"
+            notifier.send_notification(title="Batch Processing Skipped", summary=summary_msg)
 
 
 if __name__ == "__main__":

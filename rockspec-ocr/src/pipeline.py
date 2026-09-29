@@ -1,6 +1,6 @@
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 import pandas as pd
 
@@ -29,7 +29,7 @@ class RockSpecCloudPipeline:
         self.renamer_service = ImageRenamerService()
         self.notifier = WebhookNotifier(webhook_url)
 
-    def process_user(self, user_info: Dict[str, Any], dry_run: bool = False) -> int:
+    def process_user(self, user_info: Dict[str, Any], dry_run: bool = False) -> Dict[str, Any]:
         email = user_info.get("email")
         base_folder_id = user_info.get("drive_folder_id")
         mapping_excel_id = user_info.get("mapping_excel_id")
@@ -66,9 +66,18 @@ class RockSpecCloudPipeline:
         # แต่ละโฟลเดอร์ย่อยจะมีไฟล์ภาพที่ต้องการประมวลผล เช่น 1.tif, 1_001.tif, 1_002.tif
 
         date_folders = self.drive_service.list_subfolders(base_folder_id)
+        
+        # แสดงผลใน CLI ว่าพบโฟลเดอร์ย่อยกี่รายการ อะไรบ้าง
+        folder_names = [f['name'] for f in date_folders]
+        print(f"📁 พบโฟลเดอร์ย่อยทั้งหมด {len(date_folders)} รายการ: {folder_names}")
+
         total_processed = 0
         total_failed = 0
         new_audit_logs = []
+        folder_stats = []
+        active_folders_count = 0  # นับเฉพาะจำนวนโฟลเดอร์ย่อยที่มีไฟล์ที่ยังไม่ได้ประมวลผล
+
+        thailand_tz = timezone(timedelta(hours=7))
 
         for folder in date_folders:
             folder_name = folder['name']
@@ -79,8 +88,24 @@ class RockSpecCloudPipeline:
             if not image_files:
                 continue
 
+            # กรองเฉพาะไฟล์ภาพที่ชื่อไฟล์ (ไม่รวมสกุลไฟล์) ประกอบด้วยตัวเลขและ/หรือ underscore เท่านั้น
+            # เช่น 1.tif, 1_001.tif, 1_002.tif, 2.tif
+            processable_files = []
+            for file_item in image_files:
+                fname_no_ext, _ = os.path.splitext(file_item['name'])
+                if re.match(r'^\d+(_\d+)*$', fname_no_ext):
+                    processable_files.append(file_item)
+
+            # หากไม่พบไฟล์ที่ต้องประมวลผล (เปลี่ยนชื่อเสร็จสิ้นหมดแล้ว หรือไม่มีไฟล์ภาพรูปแบบตัวเลข) ให้ข้ามโฟลเดอร์ย่อยนี้
+            if not processable_files:
+                print(f"⏩ [SKIP FOLDER] {folder_name} (เปลี่ยนชื่อเสร็จสิ้นแล้ว หรือไม่มีไฟล์ใหม่ที่ต้องประมวลผล)")
+                continue
+
+            # นับเฉพาะโฟลเดอร์ที่มีไฟล์เข้ากระบวนการประมวลผล
+            active_folders_count += 1
+
             # เรียงลำดับชื่อไฟล์ภาพตามลำดับธรรมชาติ
-            image_files.sort(key=lambda x: natural_sort_key(x['name']))
+            processable_files.sort(key=lambda x: natural_sort_key(x['name']))
 
             # แสดงผลการเริ่มประมวลผลแยกตามโฟลเดอร์ย่อย
             print(f"\n>>> Folder : {folder_name}")
@@ -91,7 +116,10 @@ class RockSpecCloudPipeline:
             zoom_num = 1
             prev_mag_val = None
 
-            for file_item in image_files:
+            folder_success_count = 0
+            folder_failed_count = 0
+
+            for file_item in processable_files:
                 file_id = file_item['id']
                 filename = file_item['name']
 
@@ -104,11 +132,23 @@ class RockSpecCloudPipeline:
                     self.sheets_db.flag_external_renamed(file_id, filename, email)
 
                 # ดึงตัวเลข Rock ID จากเลขขึ้นต้นของชื่อไฟล์
-                temp_filename = filename[len(folder_name):] if filename.startswith(folder_name) else filename
-                clean_temp = temp_filename.lstrip('_- ')
-                match = re.search(r'^(\d+)', clean_temp) or re.search(r'(\d+)', temp_filename) or re.search(r'(\d+)', filename)
+                fname_no_ext, ext = os.path.splitext(filename)
+                match = re.match(r'^(\d+)', fname_no_ext)
 
                 if not match:
+                    folder_failed_count += 1
+                    total_failed += 1
+                    # บันทึกลง Log แม้ว่าจะดึง Rock ID ไม่ได้
+                    new_audit_logs.append({
+                        "Timestamp": datetime.now(thailand_tz).strftime("%Y-%m-%d %H:%M:%S"),
+                        "User_Email": email,
+                        "Subfolder_Name": folder_name,
+                        "Drive_File_ID": file_id,
+                        "Original_Name": filename,
+                        "New_Name": filename,
+                        "Magnification": "-",
+                        "Status": "FAILED"
+                    })
                     continue
 
                 rock_id = self.repo.clean_id(match.group(1))
@@ -116,7 +156,19 @@ class RockSpecCloudPipeline:
 
                 if not rock_name:
                     print(f"  ⚠️ [SKIP] ไม่พบข้อมูล Mapping ของตัวอย่าง ID: {rock_id} \tสำหรับ {filename:<15} (วันที่ {folder_norm_date})")
+                    folder_failed_count += 1
                     total_failed += 1
+                    # บันทึกลง Log แม้ว่าจะไม่พบข้อมูล Mapping
+                    new_audit_logs.append({
+                        "Timestamp": datetime.now(thailand_tz).strftime("%Y-%m-%d %H:%M:%S"),
+                        "User_Email": email,
+                        "Subfolder_Name": folder_name,
+                        "Drive_File_ID": file_id,
+                        "Original_Name": filename,
+                        "New_Name": filename,
+                        "Magnification": "-",
+                        "Status": "FAILED"
+                    })
                     continue
 
                 # ดาวน์โหลดรูปภาพเข้า Memory Stream เพื่อรัน OCR
@@ -153,8 +205,6 @@ class RockSpecCloudPipeline:
                 current_rock_id = rock_id
                 prev_mag_val = current_mag_val
 
-                ext = os.path.splitext(filename)[1]
-
                 new_filename = self.renamer_service.generate_new_filename(
                     rock_name, point_num, zoom_num, mag, ext
                 )
@@ -164,14 +214,22 @@ class RockSpecCloudPipeline:
                     success = self.drive_service.rename_file(file_id, new_filename)
                     status_str = "SUCCESS" if success else "FAILED"
                     print(f"  ✏️ [{status_str:<7}] {filename:<15} ➡️   {new_filename:<20} (Mag: {mag}x)")
+                    if success:
+                        folder_success_count += 1
+                        total_processed += 1
+                    else:
+                        folder_failed_count += 1
+                        total_failed += 1
                 else:
                     status_str = "DRY-RUN"
                     print(f"  🔍 [{status_str:<7}] {filename:<15} ➡️   {new_filename:<20} (Mag: {mag}x)")
+                    folder_success_count += 1
+                    total_processed += 1
 
-                total_processed += 1
                 new_audit_logs.append({
-                    "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "Timestamp": datetime.now(thailand_tz).strftime("%Y-%m-%d %H:%M:%S"),
                     "User_Email": email,
+                    "Subfolder_Name": folder_name,
                     "Drive_File_ID": file_id,
                     "Original_Name": filename,
                     "New_Name": new_filename,
@@ -179,21 +237,58 @@ class RockSpecCloudPipeline:
                     "Status": status_str
                 })
 
-        # 5. บันทึก Transaction Log และส่งการแจ้งเตือน
+            folder_stats.append({
+                "folder_name": folder_name,
+                "success": folder_success_count,
+                "failed": folder_failed_count
+            })
+
+        # หากไม่มีไฟล์ที่ถูกนำมาประมวลผลเลย
+        if active_folders_count == 0 or len(new_audit_logs) == 0:
+            print(f"\n✨ ทุกโฟลเดอร์สำหรับ {email} ประมวลผลเสร็จสิ้นแล้ว ไม่พบไฟล์ที่ต้องประมวลผลใหม่")
+            return {
+                "email": email,
+                "active_folders_count": 0,
+                "success_count": 0,
+                "failed_count": 0,
+                "total_files": 0
+            }
+
+        # 5. บันทึก Transaction Log และส่ง Email แจ้งเตือนเมื่อมีไฟล์ถูกดึงมาประมวลผล
         if not dry_run and new_audit_logs:
             self.sheets_db.append_transaction_logs_batch(new_audit_logs)
             
-            summary_msg = f"ประมวลผลเปลี่ยนชื่อไฟล์สำเร็จ **{total_processed}** รายการ ให้แก่ {email}"
-            self.notifier.send_notification(title="Batch Processing Completed", summary=summary_msg)
-            
+            folder_html_list = [
+                f"<li><b>โฟลเดอร์ {fs['folder_name']}:</b> สำเร็จ <span style='color:green;'>{fs['success']}</span> รายการ, ไม่สำเร็จ <span style='color:red;'>{fs['failed']}</span> รายการ</li>"
+                for fs in folder_stats if (fs['success'] + fs['failed']) > 0
+            ]
+            folder_details_html = "".join(folder_html_list)
+
+            # ส่ง Email ทุกครั้งที่มีการประมวลผลไฟล์ (แม้จะไม่สำเร็จเลยก็ตาม)
             html_body = f"""
-            <h3>🗿 RockSpec OCR Processing Report</h3>
+            <h3>RockSpec OCR Processing Report</h3>
             <p>เรียนผู้ใช้งาน {email},</p>
-            <p>ระบบได้ประมวลผลเปลี่ยนชื่อไฟล์บน Google Drive ของคุณเรียบร้อยแล้ว จำนวนทั้งหมด <b>{total_processed}</b> รายการ</p>
+            <p>ระบบได้ประมวลผลเปลี่ยนชื่อไฟล์บน Google Drive ของคุณเรียบร้อยแล้ว รายละเอียดสรุปมีดังนี้:</p>
+            <ul>
+                <li><b>สำเร็จทั้งหมด:</b> <span style="color:green;">{total_processed}</span> รายการ</li>
+                <li><b>ไม่สำเร็จทั้งหมด:</b> <span style="color:red;">{total_failed}</span> รายการ</li>
+            </ul>
+            <h4>📂 รายละเอียดแยกตามโฟลเดอร์ย่อย:</h4>
+            <ul>
+                {folder_details_html}
+            </ul>
+            <p>🔗 ท่านสามารถตรวจสอบประวัติและรายละเอียดเพิ่มเติมได้ที่หน้าเว็บ UI: <a href="https://rockspec-ocr.streamlit.app">RockSpec OCR Web Application</a></p>
             <hr>
             <p><small>RockSpec OCR Automated System - GitHub Actions Execution</small></p>
             """
             self.email_gateway.send_email(email, "RockSpec OCR: รายงานสรุปการเปลี่ยนชื่อไฟล์", html_body)
 
         print(f"\n✅ ประมวลผลสำหรับ {email} สำเร็จทั้งหมด {total_processed} รายการ ไม่สำเร็จ {total_failed} รายการ")
-        return total_processed
+
+        return {
+            "email": email,
+            "active_folders_count": active_folders_count,
+            "success_count": total_processed,
+            "failed_count": total_failed,
+            "total_files": len(new_audit_logs)
+        }
