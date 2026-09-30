@@ -1,135 +1,110 @@
 # เอกสารแผนงาน สถาปัตยกรรม และรายงานผลการทดสอบประจำ Sprint 3 (Final Release)
 
-**ชื่อโปรเจกต์:** ระบบประมวลผลและเปลี่ยนชื่อไฟล์ภาพถ่ายกล้องจุลทรรศน์อิเล็กตรอนอัตโนมัติ (SEM Rock Image Renamer / RockSpec OCR)
-
-**วิชา:** CP352301 Script Programming | **ภาคการศึกษา:** 1/2569
-
+**ชื่อโปรเจกต์:** ระบบประมวลผลและเปลี่ยนชื่อไฟล์ภาพถ่ายกล้องจุลทรรศน์อิเล็กตรอนอัตโนมัติ (SEM Rock Image Renamer / RockSpec OCR)  
+**วิชา:** CP352301 Script Programming | **ภาคการศึกษา:** 1/2569  
 **ระยะเวลา:** Sprint 3 (สัปดาห์ที่ 14–15: In-Memory Cloud Stream Pipeline, Smart Point/Zoom Calculation & Multi-Channel Reporting)
 
 ---
 
-### 1. วัตถุประสงค์และขอบเขตโครงการ (Project Purpose & Scope)
+## 1. วัตถุประสงค์และขอบเขตโครงการ (Project Purpose & Scope)
 
 ยกระดับระบบจาก Sprint 2 ให้กลายเป็น **Cloud-Native Automation Pipeline** เต็มรูปแบบ ทำงานแบบไร้แผ่นดิสก์ (Diskless In-Memory Execution) ผ่าน Google Cloud APIs โดยดึงและเปลี่ยนชื่อไฟล์ภาพถ่ายทางธรณีวิทยาบน Google Drive และบันทึกประวัติลง Google Sheets DB โดยมีขอบเขตการทำงานใน Sprint 3 ดังนี้:
 
-* พัฒนา **In-Memory Stream Processing (`ImageOCRProcessor` & `GoogleDriveService`)** ดาวน์โหลดไฟล์ภาพผ่าน `io.BytesIO` เพื่อป้อนเข้า OpenCV/EasyOCR โดยไม่ต้องเขียนไฟล์ชั่วคราวลงในดิสก์ของ Runner
-* พัฒนา **Smart Point & Zoom Sequence Algorithm** คำนวณลำดับจุดถ่ายภาพ (Point) และระดับการซูม (Zoom) อัตโนมัติ โดยตรวจจับการเปลี่ยนค่า Rock ID และการลดลงของกำลังขยาย (`current_mag_val < prev_mag_val`) ร่วมกับการทำ Natural Sorting (`1.tif`, `1_001.tif`, `1_002.tif`, `2.tif`)
-* พัฒนา **Regex Subfolder & File Filtering (`^\d+(_\d+)*$`)** เพื่อคัดกรองเฉพาะไฟล์ภาพรหัสดั้งเดิม และข้ามโฟลเดอร์หรือไฟล์ที่ประมวลผลเสร็จสิ้นแล้วโดยอัตโนมัติ
-* เพิ่มระบบ **Dual-Key External Rename Detection (`check_dual_key_status`)** ตรวจสอบย้อนกลับระหว่าง `Drive_File_ID` กับ `Transactions_Log` หากชื่อไฟล์บน Drive เปลี่ยนไปจาก Log ล่าสุด จะทำ Flag สถานะ `EXTERNAL_RENAMED` ลงในระบบ
-* พัฒนา **SMTP HTML Email Gateway (`EmailGateway`)** ส่งอีเมลรายงานสรุปผลการประมวลผลแยกตามโฟลเดอร์ย่อย (สำเร็จ/ไม่สำเร็จ) พร้อมลิงก์เข้าชม Web UI ส่งตรงถึงอีเมลผู้ใช้งาน
-* จัดการ **Timezone Normalization (UTC+7 Thailand Time)** ปรับปรุงการบันทึก Timestamp ในระบบ Log ให้เป็นเวลาประเทศไทยถูกต้องทุกจุด
+- **In-Memory Stream Processing (`ImageOCRProcessor` & `GoogleDriveService`):** ดาวน์โหลดไฟล์ภาพผ่าน `io.BytesIO` เพื่อป้อนเข้า OpenCV/EasyOCR โดยไม่ต้องเขียนไฟล์ชั่วคราวลงในดิสก์ของ Runner
+- **Smart Point & Zoom Sequence Algorithm:** คำนวณลำดับจุดถ่ายภาพ (Point) และระดับการซูม (Zoom) อัตโนมัติ โดยตรวจจับการเปลี่ยนค่า Rock ID และการลดลงของกำลังขยาย (`current_mag_val < prev_mag_val`) ร่วมกับการทำ Natural Sorting (`1.tif`, `1_001.tif`, `1_002.tif`, `2.tif`)
+- **Regex Subfolder & File Filtering (`^\d+(_\d+)*$`):** เพื่อคัดกรองเฉพาะไฟล์ภาพรหัสดั้งเดิม และข้ามโฟลเดอร์หรือไฟล์ที่ประมวลผลเสร็จสิ้นแล้วโดยอัตโนมัติ
+- **Dual-Key External Rename Detection (`check_dual_key_status`):** ตรวจสอบย้อนกลับระหว่าง `Drive_File_ID` กับ `Transactions_Log` หากชื่อไฟล์บน Drive เปลี่ยนไปจาก Log ล่าสุด จะทำ Flag สถานะ `EXTERNAL_RENAMED` ลงในระบบ
+- **SMTP HTML Email Gateway (`EmailGateway`):** ส่งอีเมลรายงานสรุปผลการประมวลผลแยกตามโฟลเดอร์ย่อย (สำเร็จ/ไม่สำเร็จ) พร้อมลิงก์เข้าชม Web UI ส่งตรงถึงอีเมลผู้ใช้งาน
+- **Timezone Normalization (UTC+7 Thailand Time):** ปรับปรุงการบันทึก Timestamp ในระบบ Log ให้เป็นเวลาประเทศไทยถูกต้องทุกจุด
 
 ---
 
-### 2. สถาปัตยกรรมระบบ (Modular Architecture & Separation of Concerns)
+## 2. สถาปัตยกรรมระบบ (Modular Architecture & Separation of Concerns)
 
 โครงสร้างระบบถูกจัดหมวดหมู่โมดูลาร์ออกเป็น 3 ชั้นหลัก (Layered Architecture) ตามโค้ดที่พัฒนาจริง:
 
-```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                   MODULE 1: DATA ACCESS LAYER (DAL)                    │
-│  - drive_service.py (GoogleDriveService: Drive API v3, BytesIO Stream) │
-│  - sheets_db.py (GoogleSheetsDB: gspread, Users, Log, OTP_Store Tabs)  │
-│  - email_gateway.py (EmailGateway: SMTP Gmail Port 587 TLS Mailer)     │
-└──────────────────────────────────┬─────────────────────────────────────┘
-                                   │
-                                   ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                   MODULE 2: BUSINESS LOGIC LAYER (BLL)                 │
-│  - security.py (SecurityEngine: Fernet Master Key Token Decryption)    │
-│  - ocr_processor.py (ImageOCRProcessor: OpenCV + EasyOCR on BytesIO)   │
-│  - renamer_service.py (ImageRenamerService: Naming & Dual-Key Tracker) │
-│  - repository.py (ExcelMappingRepository: BE/AD Date Normalization)    │
-│  - pipeline.py (RockSpecCloudPipeline: Cloud Batch Orchestrator)       │
-└──────────────────────────────────┬─────────────────────────────────────┘
-                                   │
-                                   ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│            MODULE 3: PRESENTATION & CI/CD LAYER (AUTOMATION)           │
-│  - notifier.py (WebhookNotifier: Discord Embed Card Alert System)      │
-│  - watcher.py (RockSpecFolderWatcher: Watchdog Debounce File Listener) │
-│  - main.py & .github/workflows/auto_rename.yml (CLI & GitHub Actions) │
-└────────────────────────────────────────────────────────────────────────┘
-
-```
++------------------------------------------------------------------------+
+|                   MODULE 1: DATA ACCESS LAYER (DAL)                    |
+|  - drive_service.py (GoogleDriveService: Drive API v3, BytesIO Stream) |
+|  - sheets_db.py (GoogleSheetsDB: gspread, Users, Log, OTP_Store Tabs)  |
+|  - email_gateway.py (EmailGateway: SMTP Gmail Port 587 TLS Mailer)     |
++----------------------------------+-------------------------------------+
+                                   |
+                                   v
++------------------------------------------------------------------------+
+|                   MODULE 2: BUSINESS LOGIC LAYER (BLL)                 |
+|  - security.py (SecurityEngine: Fernet Master Key Token Decryption)    |
+|  - ocr_processor.py (ImageOCRProcessor: OpenCV + EasyOCR on BytesIO)   |
+|  - renamer_service.py (ImageRenamerService: Naming & Dual-Key Tracker) |
+|  - repository.py (ExcelMappingRepository: BE/AD Date Normalization)    |
+|  - pipeline.py (RockSpecCloudPipeline: Cloud Batch Orchestrator)       |
++----------------------------------+-------------------------------------+
+                                   |
+                                   v
++------------------------------------------------------------------------+
+|            MODULE 3: PRESENTATION & CI/CD LAYER (AUTOMATION)           |
+|  - notifier.py (WebhookNotifier: Discord Embed Card Alert System)      |
+|  - watcher.py (RockSpecFolderWatcher: Watchdog Debounce File Listener) |
+|  - main.py & .github/workflows/auto_rename.yml (CLI & GitHub Actions) |
++------------------------------------------------------------------------+
 
 ---
 
-### 3. นิยามความเสร็จสมบูรณ์ของงาน (Definition of Done - DoD)
+## 3. นิยามความเสร็จสมบูรณ์ของงาน (Definition of Done - DoD)
 
 งานใน Sprint 3 ถือว่าเสร็จสมบูรณ์ (Done) เมื่อผ่านเกณฑ์ต่อไปนี้ทุกข้อ:
 
-* [x] **In-Memory Stream Extraction (`ImageOCRProcessor`):** ฟังก์ชัน `extract_magnification` รองรับอินพุตประเภท `io.BytesIO` ทำให้ประมวลผล OCR จาก Stream บน Memory ได้โดยตรงโดยไม่ต้องบันทึกไฟล์ลงดิสก์
-* [x] **Smart Point/Zoom Logic & Natural Sort:** ระบบสามารถจัดเรียงไฟล์ภาพแบบลำดับธรรมชาติ (`natural_sort_key`) และคำนวณ Point/Zoom ได้ถูกต้อง แม้มีการเปลี่ยน ID หรือมีการซูมออก (Mag Dropped)
-* [x] **Regex File Filtering & Auto-Skip:** สคริปต์กรองเฉพาะไฟล์ที่ตรงเงื่อนไข `^\d+(_\d+)*$` และข้ามโฟลเดอร์ย่อยที่ไม่มีไฟล์ใหม่ได้อย่างถูกต้อง
-* [x] **Dual-Key External Rename Flagging:** เมื่อตรวจพบไฟล์เดิมบน Drive ถูกเปลี่ยนชื่อโดยผู้ใช้ภายนอก ระบบจะบันทึกสถานะ `EXTERNAL_RENAMED` ลง Google Sheets DB ได้แม่นยำ
-* [x] **SMTP HTML Email Gateway Integration:** ระบบส่งอีเมลรายงานสรุปผลการเปลี่ยนชื่อไฟล์ (แยกสำเร็จ/ไม่สำเร็จตามโฟลเดอร์) ถึงผู้ใช้งานผ่าน `smtp.gmail.com:587` สำเร็จ
-* [x] **UTC+7 Thailand Timestamp Standard:** การบันทึกเวลาใน `Transactions_Log` ใช้ `timezone(timedelta(hours=7))` แสดงเวลามาตรฐานประเทศไทยถูกต้องทุกแถว
+- [x] **In-Memory Stream Extraction (`ImageOCRProcessor`):** ฟังก์ชัน `extract_magnification` รองรับอินพุตประเภท `io.BytesIO` ทำให้ประมวลผล OCR จาก Stream บน Memory ได้โดยตรงโดยไม่ต้องบันทึกไฟล์ลงดิสก์
+- [x] **Smart Point/Zoom Logic & Natural Sort:** ระบบสามารถจัดเรียงไฟล์ภาพแบบลำดับธรรมชาติ (`natural_sort_key`) และคำนวณ Point/Zoom ได้ถูกต้อง แม้มีการเปลี่ยน ID หรือมีการซูมออก (Mag Dropped)
+- [x] **Regex File Filtering & Auto-Skip:** สคริปต์กรองเฉพาะไฟล์ที่ตรงเงื่อนไข `^\d+(_\d+)*$` และข้ามโฟลเดอร์ย่อยที่ไม่มีไฟล์ใหม่ได้อย่างถูกต้อง
+- [x] **Dual-Key External Rename Flagging:** เมื่อตรวจพบไฟล์เดิมบน Drive ถูกเปลี่ยนชื่อโดยผู้ใช้ภายนอก ระบบจะบันทึกสถานะ `EXTERNAL_RENAMED` ลง Google Sheets DB ได้แม่นยำ
+- [x] **SMTP HTML Email Gateway Integration:** ระบบส่งอีเมลรายงานสรุปผลการเปลี่ยนชื่อไฟล์ (แยกสำเร็จ/ไม่สำเร็จตามโฟลเดอร์) ถึงผู้ใช้งานผ่าน `smtp.gmail.com:587` สำเร็จ
+- [x] **UTC+7 Thailand Timestamp Standard:** การบันทึกเวลาใน `Transactions_Log` ใช้ `timezone(timedelta(hours=7))` แสดงเวลามาตรฐานประเทศไทยถูกต้องทุกแถว
 
 ---
 
-### 4. แผนการจัดสรรหน้าที่และบทบาทภายในทีม (Team Roles & Responsibilities)
+## 4. แผนการจัดสรรหน้าที่และบทบาทภายในทีม (Team Roles & Responsibilities)
 
 | บทบาท (Role) | สมาชิกที่รับผิดชอบ | ภารกิจหลักใน Sprint 3 (Final Release) |
-| --- | --- | --- |
-| **Planner / Team Leader** | พีรพล พรหมมิ | • ออกแบบสถาปัตยกรรมระบบ Cloud Pipeline (`RockSpecCloudPipeline`) แบบ In-Memory Stream<br>
-
-<br>• ออกแบบอัลกอริทึม Smart Point/Zoom คำนวณตามการลดลงของกำลังขยาย<br>
-
-<br>• จัดทำเอกสารสรุปสถาปัตยกรรม แผนงาน และรายงานผลการทดสอบฉบับสมบูรณ์ |
-| **Coder** | ธนธรณ์ ผาลัง | • พัฒนาโมดูล `drive_service.py`, `sheets_db.py`, `email_gateway.py`<br>
-
-<br>• อัปเดต `ocr_processor.py` ให้รองรับ `io.BytesIO` Stream และเขียนลอจิก `pipeline.py`<br>
-
-<br>• พัฒนาระบบ Fernet Token Encryption ใน `security.py` และ Dual-Key Tracking |
-| **Debugger / QA** | พีรพล พรหมมิ | • ทดสอบการรัน Cloud Pipeline บน GitHub Actions และจำลองการอ่านไฟล์รูปแบบต่างๆ<br>
-
-<br>• ตรวจสอบความถูกต้องของตาราง `Transactions_Log` และการส่งอีเมล HTML Report<br>
-
-<br>• สอบทานความแม่นยำของ Natural Sorting และการจัดการข้อยกเว้นกรณีไม่พบข้อมูล Mapping |
+| :--- | :--- | :--- |
+| **Planner / Team Leader** | พีรพล พรหมมิ | - ออกแบบสถาปัตยกรรมระบบ Cloud Pipeline (`RockSpecCloudPipeline`) แบบ In-Memory Stream<br>- ออกแบบอัลกอริทึม Smart Point/Zoom คำนวณตามการลดลงของกำลังขยาย<br>- จัดทำเอกสารสรุปสถาปัตยกรรม แผนงาน และรายงานผลการทดสอบฉบับสมบูรณ์ |
+| **Coder** | ธนธรณ์ ผาลัง | - พัฒนาโมดูล `drive_service.py`, `sheets_db.py`, `email_gateway.py`<br>- อัปเดต `ocr_processor.py` ให้รองรับ `io.BytesIO` Stream และเขียนลอจิก `pipeline.py`<br>- พัฒนาระบบ Fernet Token Encryption ใน `security.py` และ Dual-Key Tracking |
+| **Debugger / QA** | พีรพล พรหมมิ | - ทดสอบการรัน Cloud Pipeline บน GitHub Actions และจำลองการอ่านไฟล์รูปแบบต่างๆ<br>- ตรวจสอบความถูกต้องของตาราง `Transactions_Log` และการส่งอีเมล HTML Report<br>- สอบทานความแม่นยำของ Natural Sorting และการจัดการข้อยกเว้นกรณีไม่พบข้อมูล Mapping |
 
 ---
 
-### 5. ผลการทดสอบระบบและตารางขอบเขตระบบ (QA Testing & Edge Cases Results)
+## 5. ผลการทดสอบระบบและตารางขอบเขตระบบ (QA Testing & Edge Cases Results)
 
 ผู้ทดสอบ (พีรพล - Debugger / QA) ได้ทำการทดสอบระบบผ่านการรันสคริปต์ `RockSpecCloudPipeline` และโมดูลต่างๆ โดยมีผลการทดสอบดังนี้:
 
 | ลำดับ | กรณีทดสอบ (Test Case) | อินพุตนำเข้า (Test Input) | พฤติกรรมที่คาดหวัง vs ผลการทดสอบจริง | สถานะ (Status) |
-| --- | --- | --- | --- | --- |
-| **1** | **In-Memory Stream OCR Processing** | `download_file_to_memory(file_id)` -> `io.BytesIO` | ระบบดาวน์โหลดไฟล์เข้า Memory Stream และส่งให้ `ImageOCRProcessor` อ่านค่ากำลังขยายได้สำเร็จโดยไม่ต้องเขียนไฟล์ลงดิสก์ | **PASSED** |
-| **2** | **Natural Sorting & Filename Order** | ไฟล์ภาพชื่อ `1.tif`, `1_001.tif`, `1_002.tif`, `2.tif` | อัลกอริทึม `natural_sort_key` เรียงลำดับไฟล์ตามตัวเลขจริง ไม่เกิดปัญหา `1_001` แซง `1` ทำให้ลำดับ Point/Zoom แม่นยำ | **PASSED** |
-| **3** | **Magnification Drop Point Increment** | ไฟล์ภาพ ID เดียวกัน แต่กำลังขยายลดลง (เช่น 1000x -> 500x) | ระบบตรวจจับได้ว่า `current_mag_val < prev_mag_val` จึงทำการขึ้นจุดใหม่ (`Point + 1`, `Zoom = 1`) ได้ถูกต้อง | **PASSED** |
-| **4** | **Subfolder & Non-Matching File Skipping** | ไฟล์ที่เปลี่ยนชื่อแล้ว เช่น `Basalt-1.1_X1k.tif` หรือไฟล์ที่ไม่ใช่ตัวเลข | Regex `^\d+(_\d+)*$` กรองไฟล์ที่ไม่ใช่อินพุตดั้งเดิมออก และข้ามโฟลเดอร์ย่อยที่มีเฉพาะไฟล์ที่ประมวลผลเสร็จแล้ว | **PASSED** |
-| **5** | **Dual-Key External Rename Detection** | `file_id` ตรงกับ Log แต่ชื่อบน Drive ถูกแก้ไขภายนอก | ฟังก์ชัน `check_dual_key_status` ตรวจพบความต่าง และสั่ง `flag_external_renamed` ลงใน Google Sheets DB ได้สำเร็จ | **PASSED** |
-| **6** | **Batch Transaction Logging (`append_rows`)** | รายการ Log สะสมของแต่ละผู้ใช้ `new_audit_logs` | ระบบรวบยอดเขียนข้อมูลลง Tab `Transactions_Log` ครั้งเดียวด้วย `append_rows()` ช่วยป้องกันปัญหา API Rate Limit (60 req/min) | **PASSED** |
-| **7** | **SMTP Email Gateway Dispatch** | ผลประมวลผลการเปลี่ยนชื่อสำเร็จ 5 รายการ ไม่สำเร็จ 1 รายการ | `EmailGateway` เชื่อมต่อ `smtp.gmail.com:587` ส่งอีเมล HTML สรุปยอดแยกตามโฟลเดอร์ย่อยถึงอีเมลผู้รับสำเร็จ | **PASSED** |
-| **8** | **Fernet Security Encryption/Decryption** | Master Key + Plain Refresh Token | `SecurityEngine` สามารถเข้ารหัสและถอดรหัส Refresh Token ของผู้ใช้ได้อย่างถูกต้องด้วยอัลกอริทึม Fernet | **PASSED** |
-| **9** | **Timezone Alignment (UTC+7 Thailand Time)** | เวลาบันทึก Log ในสคริปต์ Pipeline | ระบบใช้ `datetime.now(timezone(timedelta(hours=7)))` บันทึกเวลามาตรฐานประเทศไทย (ICT) ลงใน Log ได้ตรงเป๊ะ | **PASSED** |
+| :---: | :--- | :--- | :--- | :---: |
+| 1 | In-Memory Stream OCR Processing | `download_file_to_memory(file_id)` -> `io.BytesIO` | ระบบดาวน์โหลดไฟล์เข้า Memory Stream และส่งให้ `ImageOCRProcessor` อ่านค่ากำลังขยายได้สำเร็จโดยไม่ต้องเขียนไฟล์ลงดิสก์ | **PASSED** |
+| 2 | Natural Sorting & Filename Order | ไฟล์ภาพชื่อ `1.tif`, `1_001.tif`, `1_002.tif`, `2.tif` | อัลกอริทึม `natural_sort_key` เรียงลำดับไฟล์ตามตัวเลขจริง ไม่เกิดปัญหา `1_001` แซง `1` ทำให้ลำดับ Point/Zoom แม่นยำ | **PASSED** |
+| 3 | Magnification Drop Point Increment | ไฟล์ภาพ ID เดียวกัน แต่กำลังขยายลดลง (เช่น 1000x -> 500x) | ระบบตรวจจับได้ว่า `current_mag_val < prev_mag_val` จึงทำการขึ้นจุดใหม่ (Point + 1, Zoom = 1) ได้ถูกต้อง | **PASSED** |
+| 4 | Subfolder & Non-Matching File Skipping | ไฟล์ที่เปลี่ยนชื่อแล้ว เช่น `Basalt-1.1_X1k.tif` หรือไฟล์ที่ไม่ใช่ตัวเลข | Regex `^\d+(_\d+)*$` กรองไฟล์ที่ไม่ใช่อินพุตดั้งเดิมออก และข้ามโฟลเดอร์ย่อยที่มีเฉพาะไฟล์ที่ประมวลผลเสร็จแล้ว | **PASSED** |
+| 5 | Dual-Key External Rename Detection | `file_id` ตรงกับ Log แต่ชื่อบน Drive ถูกแก้ไขภายนอก | ฟังก์ชัน `check_dual_key_status` ตรวจพบความต่าง และสั่ง `flag_external_renamed` ลงใน Google Sheets DB ได้สำเร็จ | **PASSED** |
+| 6 | Batch Transaction Logging (`append_rows`) | รายการ Log สะสมของแต่ละผู้ใช้ `new_audit_logs` | ระบบรวบยอดเขียนข้อมูลลง Tab `Transactions_Log` ครั้งเดียวด้วย `append_rows()` ช่วยป้องกันปัญหา API Rate Limit (60 req/min) | **PASSED** |
+| 7 | SMTP Email Gateway Dispatch | ผลประมวลผลการเปลี่ยนชื่อสำเร็จ 5 รายการ ไม่สำเร็จ 1 รายการ | `EmailGateway` เชื่อมต่อ `smtp.gmail.com:587` ส่งอีเมล HTML สรุปยอดแยกตามโฟลเดอร์ย่อยถึงอีเมลผู้รับสำเร็จ | **PASSED** |
+| 8 | Fernet Security Encryption/Decryption | Master Key + Plain Refresh Token | `SecurityEngine` สามารถเข้ารหัสและถอดรหัส Refresh Token ของผู้ใช้ได้อย่างถูกต้องด้วยอัลกอริทึม Fernet | **PASSED** |
+| 9 | Timezone Alignment (UTC+7 Thailand Time) | เวลาบันทึก Log ในสคริปต์ Pipeline | ระบบใช้ `datetime.now(timezone(timedelta(hours=7)))` บันทึกเวลามาตรฐานประเทศไทย (ICT) ลงใน Log ได้ตรงเป๊ะ | **PASSED** |
 
 ---
 
-### 6. สรุปบทเรียนประจำ Sprint (Sprint Retrospective)
+## 6. สรุปบทเรียนประจำ Sprint (Sprint Retrospective)
 
 ### 🌟 Wow! (จุดเด่นที่ทำได้ดีมาก)
-
 1. **Fully Diskless In-Memory Pipeline:** การประมวลผลภาพถ่ายจาก Google Drive เข้า `io.BytesIO` โดยตรงผ่าน Google Drive API ช่วยขจัดปัญหา Disk I/O และลดความเสี่ยงจากการสะสมไฟล์ขยะใน Runner บน Cloud ได้อย่างสมบูรณ์
 2. **Smart Point/Zoom & Natural Sorting:** การนำอัลกอริทึม `natural_sort_key` มาใช้ร่วมกับการตรวจจับกำลังขยายที่ลดลง (`current_mag_val < prev_mag_val`) ช่วยแก้ปัญหาการนับลำดับจุดถ่ายภาพซ้ำซ้อนได้อย่างเที่ยงตรง
 3. **Comprehensive Multi-Channel Automated Reporting:** การรวมระบบแจ้งเตือนทั้ง Discord Webhook และ SMTP HTML Email สรุปผลแยกโฟลเดอร์ ทำให้ผู้ใช้งานทราบสถานะการประมวลผลได้ทันทีอย่างเป็นมืออาชีพ
 
----
-
 ### 💡 Whoops! (ปัญหาที่พบและแนวทางการแก้ไข)
-
 1. **ปัญหาการจัดเรียงชื่อไฟล์แบบ String Sort ใน Python:**
-* *ปัญหา:* การเรียงลำดับชื่อไฟล์แบบปกติ (`sorted()`) ทำให้ไฟล์ `10.tif` ถูกจัดไว้ก่อน `2.tif` ส่งผลให้ลำดับ Point/Zoom ผิดพลาด
-* *แนวทางแก้ไข:* เขียนฟังก์ชัน `natural_sort_key(s)` แยกข้อความด้วย Regex `re.split(r'(\d+)', s)` แล้วแปลงส่วนที่เป็นตัวเลขให้เป็น `int` ทำให้เรียงลำดับตามค่าตัวเลขจริง
-
-
+   - *ปัญหา:* การเรียงลำดับชื่อไฟล์แบบปกติ (`sorted()`) ทำให้ไฟล์ `10.tif` ถูกจัดไว้ก่อน `2.tif` ส่งผลให้ลำดับ Point/Zoom ผิดพลาด
+   - *แนวทางแก้ไข:* เขียนฟังก์ชัน `natural_sort_key(s)` แยกข้อความด้วย Regex `re.split(r'(\d+)', s)` แล้วแปลงส่วนที่เป็นตัวเลขให้เป็น `int` ทำให้เรียงลำดับตามค่าตัวเลขจริง
 2. **ปัญหา Google Sheets API Quota Exceeded (Rate Limit):**
-* *ปัญหา:* การสั่งบันทึก `append_row()` ทีละแถวขณะวนลูปไฟล์จำนวนมาก ทำให้เกิดข้อผิดพลาด HTTP 429 จาก Google API
-* *แนวทางแก้ไข:* ปรับปรุง `sheets_db.py` ให้ใช้ `append_transaction_logs_batch` รวบรวมข้อมูลทั้งหมดเป็นบอร์ดเดียว แล้วสั่ง `append_rows()` ครั้งเดียวหลังจบกระบวนการ
-
-
+   - *ปัญหา:* การสั่งบันทึก `append_row()` ทีละแถวขณะวนลูปไฟล์จำนวนมาก ทำให้เกิดข้อผิดพลาด HTTP 429 จาก Google API
+   - *แนวทางแก้ไข:* ปรับปรุง `sheets_db.py` ให้ใช้ `append_transaction_logs_batch` รวบรวมข้อมูลทั้งหมดเป็นบอร์ดเดียว แล้วสั่ง `append_rows()` ครั้งเดียวหลังจบกระบวนการ
 3. **ปัญหา Timezone บน Cloud Runner ไม่ตรงกับเวลาไทย:**
-* *ปัญหา:* เครื่อง Cloud Runner รันด้วยเวลามาตรฐาน UTC ทำให้เวลาใน `Transactions_Log` ช้ากว่าเวลาจริงในประเทศไทย 7 ชั่วโมง
-* *แนวทางแก้ไข:* กำหนดโครงสร้าง `thailand_tz = timezone(timedelta(hours=7))` แล้วส่งเข้า `datetime.now(thailand_tz)` ก่อนแปลงเป็น string รูปแบบ `YYYY-MM-DD HH:MM:SS`
+   - *ปัญหา:* เครื่อง Cloud Runner รันด้วยเวลามาตรฐาน UTC ทำให้เวลาใน `Transactions_Log` ช้ากว่าเวลาจริงในประเทศไทย 7 ชั่วโมง
+   - *แนวทางแก้ไข:* กำหนดโครงสร้าง `thailand_tz = timezone(timedelta(hours=7))` แล้วส่งเข้า `datetime.now(thailand_tz)` ก่อนแปลงเป็น string รูปแบบ `YYYY-MM-DD HH:MM:SS`
