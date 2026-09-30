@@ -1,10 +1,9 @@
-นี่คือเนื้อหาทั้งหมดในรูปแบบ **Markdown (.md)** ซึ่งสามารถคัดลอกเอาไปวางในไฟล์บันทึกเป็น `SPRINT3_REPORT.md` ได้ทันทีครับ:
-
-```markdown
 # เอกสารแผนงาน สถาปัตยกรรม และรายงานผลการทดสอบประจำ Sprint 3 (Final Release)
 
-**ชื่อโปรเจกต์:** ระบบประมวลผลและเปลี่ยนชื่อไฟล์ภาพถ่ายกล้องจุลทรรศน์อิเล็กตรอนอัตโนมัติ (SEM Rock Image Renamer / RockSpec OCR)  
-**วิชา:** CP352301 Script Programming | **ภาคการศึกษา:** 1/2569  
+**ชื่อโปรเจกต์:** ระบบประมวลผลและเปลี่ยนชื่อไฟล์ภาพถ่ายกล้องจุลทรรศน์อิเล็กตรอนอัตโนมัติ (SEM Rock Image Renamer / RockSpec OCR)
+
+**วิชา:** CP352301 Script Programming | **ภาคการศึกษา:** 1/2569
+
 **ระยะเวลา:** Sprint 3 (สัปดาห์ที่ 14–15: In-Memory Cloud Stream Pipeline, Smart Point/Zoom Calculation & Multi-Channel Reporting)
 
 ---
@@ -134,7 +133,3 @@
 3. **ปัญหา Timezone บน Cloud Runner ไม่ตรงกับเวลาไทย:**
 * *ปัญหา:* เครื่อง Cloud Runner รันด้วยเวลามาตรฐาน UTC ทำให้เวลาใน `Transactions_Log` ช้ากว่าเวลาจริงในประเทศไทย 7 ชั่วโมง
 * *แนวทางแก้ไข:* กำหนดโครงสร้าง `thailand_tz = timezone(timedelta(hours=7))` แล้วส่งเข้า `datetime.now(thailand_tz)` ก่อนแปลงเป็น string รูปแบบ `YYYY-MM-DD HH:MM:SS`
-
-
-
-```
