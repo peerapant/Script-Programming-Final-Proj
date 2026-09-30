@@ -1,106 +1,117 @@
-# เอกสารแผนงาน สถาปัตยกรรม และรายงานผลการทดสอบประจำ Sprint 2
+## เอกสารแผนงาน สถาปัตยกรรม และรายงานผลการทดสอบประจำ Sprint 3
 
-**ชื่อโปรเจกต์:** ระบบประมวลผลและเปลี่ยนชื่อไฟล์ภาพถ่ายกล้องจุลทรรศน์อิเล็กตรอนอัตโนมัติ (SEM Rock Image Renamer)  
-**วิชา:** CP352301 Script Programming | **ภาคการศึกษา:** 1/2569  
-**ระยะเวลา:** Sprint 2 (สัปดาห์ที่ 13: Core Infrastructure, Cloud APIs, DB & Headless GitHub Actions)
+**ชื่อโปรเจกต์:** ระบบประมวลผลและเปลี่ยนชื่อไฟล์ภาพถ่ายกล้องจุลทรรศน์อิเล็กตรอนอัตโนมัติ (SEM Rock Image Renamer)
 
----
+**วิชา:** CP352301 Script Programming | **ภาคการศึกษา:** 1/2569
 
-## 1. วัตถุประสงค์และขอบเขตโครงการ (Project Purpose & Scope)
-
-ย้ายระบบประมวลผลจากเดิมที่รันบน Local/Google Colab ขึ้นสู่ระบบอัตโนมัติบน Cloud 100% แบบ Headless (ไม่มี UI) สามารถรันประมวลผลเบื้องหลังได้ตามรอบเวลาที่กำหนด (Cron Job) และรันผ่านคำสั่ง CLI โดยมีขอบเขตการทำงานใน Sprint 2 ดังนี้:
-
-- **Data Access Layer (DAL):** เชื่อมต่อ Google Sheets เป็น Database (รองรับตาราง Users, Transactions_Log, OTP_Store) โดยควบคุม Rate Limit
-- **Google Drive API & Dual-Key Drive Engine:** สกัดภาพเข้า Memory Stream (`io.BytesIO`) โดยไม่เขียนไฟล์ลงดิสก์ และใช้ระบบ Dual-Key Drive Engine (`file_id` + `name`) ในการอ้างอิงและเปลี่ยนชื่อไฟล์
-- **Security Token Encryption:** เพิ่มระบบความปลอดภัย เข้ารหัสและถอดรหัส Refresh Token ของผู้ใช้ด้วย `cryptography.fernet.Fernet`
-- **Batch Pipeline Orchestrator & CLI:** สร้าง Batch Pipeline Orchestrator และหน้าต่าง CLI (`main.py`) รองรับคำสั่ง `--user_email`, `--all_users`, และ `--dry_run`
-- **CI/CD GitHub Actions Automation:** ตั้งค่า CI/CD บน GitHub Actions (`auto_rename.yml`) สั่งรันอัตโนมัติทุก 6 ชั่วโมงและแบบสั่งด้วยมือ (Manual Trigger) พร้อมดึงค่าความลับผ่าน GitHub Secrets
+**ระยะเวลา:** Sprint 3 (สัปดาห์ที่ 14: Streamlit Web UI, OAuth 2.0 Authorization, User Management Dashboard & Cloud Deployment)
 
 ---
 
-## 2. สถาปัตยกรรมระบบ (Modular Architecture & Separation of Concerns)
+### 1. วัตถุประสงค์และขอบเขตโครงการ (Project Purpose & Scope)
 
-โครงสร้างระบบถูกปรับปรุงให้รองรับการทำงานบน Cloud API และ Headless Execution แบบแยกชั้นหน้าที่ (Layered Architecture):
+ต่อยอดจากระบบ Headless Pipeline ใน Sprint 2 โดยการพัฒนาส่วนติดต่อผู้ใช้แบบเว็บ (Web User Interface) ด้วย Streamlit เพื่ออำนวยความสะดวกให้ผู้ใช้งานทั่วไปสามารถเข้าสู่ระบบ มอบสิทธิ์การเข้าถึง Google Drive ผ่าน OAuth 2.0 และตั้งค่าการเชื่อมต่อข้อมูลได้เองอย่างสะดวก โดยมีขอบเขตการทำงานใน Sprint 3 ดังนี้:
 
-+------------------------------------------------------------------------+
-|                   MODULE 1: DATA ACCESS LAYER (DAL)                    |
-|  - sheets_db.py (Google Sheets DB: Users, Transactions_Log, OTP_Store) |
-|  - drive_service.py (Drive API: Dual-Key file_id & name, Memory Stream)|
-|  - email_gateway.py (SMTP Mail Gateway: แจ้งเตือนผลผ่าน Gmail/App Pass)   |
-+----------------------------------+-------------------------------------+
-                                   |
-                                   v
-+------------------------------------------------------------------------+
-|                   MODULE 2: BUSINESS LOGIC LAYER (BLL)                 |
-|  - security.py (Fernet Token Encryption / Decryption)                  |
-|  - renamer_service.py (Dual-Key Matching & Flag EXTERNAL_RENAMED)      |
-|  - pipeline.py (Batch Orchestrator: Scan -> OCR -> Rename -> Log/Email)|
-+----------------------------------+-------------------------------------+
-                                   |
-                                   v
-+------------------------------------------------------------------------+
-|            MODULE 3: PRESENTATION & CI/CD LAYER (CLI & AUTOMATION)     |
-|  - main.py (CLI Entrypoint: --user_email, --all_users, --dry_run)      |
-|  - .github/workflows/auto_rename.yml (Cron Job, Secrets & Runner)      |
-+------------------------------------------------------------------------+
+* พัฒนา **Streamlit Web Frontend (`app.py`)** เป็นส่วนหน้าจอหลักสำหรับผู้ใช้งาน แสดงสถานะการมอบสิทธิ์และจัดการข้อมูลส่วนตัว
+* เชื่อมต่อ **Google OAuth 2.0 Authentication Flow** สำหรับขอสิทธิ์เข้าถึง Google Drive และจัดเก็บ Refresh Token แบบเข้ารหัส (`Fernet`) ลงในฐานข้อมูล Google Sheets DB โดยอัตโนมัติ
+* สร้างหน้าต่าง **User Mapping Dashboard** ให้ผู้ใช้สามารถระบุ Google Drive Folder ID และ Google Sheet Mapping URL/ID เพื่อใช้จับคู่ข้อมูลภาพถ่าย SEM
+* ตั้งค่าการรันและ Deploy บน **Streamlit Community Cloud / Local Host** พร้อมจัดการความลับผ่าน `.env` และ Streamlit Secrets (`st.secrets`)
+* ทดสอบการใช้งานร่วมระหว่างส่วนหน้าเว็บ (Streamlit Frontend) และส่วนหลังบ้าน (GitHub Actions Batch Pipeline)
 
 ---
 
-## 3. นิยามความเสร็จสมบูรณ์ของงาน (Definition of Done - DoD)
+### 2. สถาปัตยกรรมระบบ (Modular Architecture & Separation of Concerns)
 
-งานใน Sprint 2 ถือว่าเสร็จสมบูรณ์ (Done) เมื่อผ่านเกณฑ์ต่อไปนี้ทุกข้อ:
+โครงสร้างระบบถูกขยายเพื่อเชื่อมต่อส่วนติดต่อผู้ใช้แบบเว็บ (Web UI) เข้ากับ Data Access Layer และ Business Logic Layer เดิมจาก Sprint 2:
 
-- [x] **Cloud Database Adapter (`sheets_db.py`):** สร้างฐานข้อมูลบน Google Sheets 3 Tabs (Users, Transactions_Log, OTP_Store) และใช้ Batch Operations (`gspread.get_all_records()`, `append_rows()`) เพื่อป้องกันปัญหา Rate Limit (60 req/min)
-- [x] **Dual-Key Drive Engine (`drive_service.py`):** ดึงภาพเข้า Memory Stream (`io.BytesIO`) และเปลี่ยนชื่อไฟล์ผ่าน `file_id` บน Google Drive ได้โดยไม่ต้องเขียนลงดิสก์
-- [x] **Security Token Encryption (`security.py`):** เข้ารหัส/ถอดรหัส Refresh Token ของผู้ใช้ได้อย่างปลอดภัยด้วย `cryptography.fernet.Fernet` ผ่าน `MASTER_ENCRYPTION_KEY`
-- [x] **External Rename Tracking (`renamer_service.py`):** ตรวจจับไฟล์ที่ถูกเปลี่ยนชื่อจากภายนอกด้วย `file_id` แล้วทำ Flag สถานะ `EXTERNAL_RENAMED` ลงใน Log ได้ถูกต้อง
-- [x] **Headless CLI Entrypoint (`main.py`):** รองรับการเรียกใช้ผ่าน CLI ทั้งแบบระบุอีเมลรายคน, สั่งรันผู้ใช้ทั้งหมด และโหมดจำลอง `--dry_run`
-- [x] **Automated CI/CD Execution (`auto_rename.yml`):** รันบน GitHub Actions ผ่านทุกขั้นตอน 100% (ตั้งแต่ Setup, System Libs, Dependencies, Unit Tests จนถึง Pipeline Execution)
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                   MODULE 4: PRESENTATION LAYER (WEB UI)                │
+│  - app.py (Streamlit Web Application Frontend)                         │
+│  - OAuth Authorization Button & Status Display                         │
+│  - User Mapping Configuration Form (Folder ID & Sheet Mapping ID)      │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                   MODULE 2: BUSINESS LOGIC LAYER (BLL)                 │
+│  - oauth_service.py (OAuth 2.0 Code Exchange & Token Handling)         │
+│  - security.py (Fernet Token Encryption / Decryption)                  │
+│  - renamer_service.py & pipeline.py (Batch Processing Orchestrator)    │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                   MODULE 1: DATA ACCESS LAYER (DAL)                    │
+│  - sheets_db.py (Google Sheets DB: Users, Transactions_Log, OTP_Store) │
+│  - drive_service.py (Google Drive API Integration & In-Memory Stream)  │
+│  - email_gateway.py (SMTP Mail Notification System)                    │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│            MODULE 3: AUTOMATION & DEPLOYMENT INFRASTRUCTURE            │
+│  - Streamlit Community Cloud / Localhost Server (Port 8501)            │
+│  - .github/workflows/auto_rename.yml (Cron Job Execution & Runner)     │
+└────────────────────────────────────────────────────────────────────────┘
+
+```
 
 ---
 
-## 4. แผนการจัดสรรหน้าที่และบทบาทภายในทีม (Team Roles & Responsibilities)
+### 3. นิยามความเสร็จสมบูรณ์ของงาน (Definition of Done - DoD)
 
-| บทบาท (Role) | สมาชิกที่รับผิดชอบ | ภารกิจหลักใน Sprint 2 |
-| :--- | :--- | :--- |
-| **Planner / Team Leader** | พีรพล พรหมมิ | - ออกแบบสถาปัตยกรรมระบบ Cloud API และระบบความปลอดภัย (Token Encryption)<br>- ออกแบบโครงสร้าง CI/CD Workflow (`auto_rename.yml`) และจัดการ GitHub Secrets<br>- จัดทำเอกสารสรุปแผนงานและสอบทานโครงสร้างภาพรวม |
-| **Coder** | ธนธรณ์ ผาลัง | - พัฒนา Data Access Layer (`sheets_db.py`, `drive_service.py`, `email_gateway.py`) <br>- พัฒนา Business Logic Layer (`security.py`, `renamer_service.py`, `pipeline.py`)<br>- เขียนจุดเชื่อมต่อ CLI (`main.py`) สำหรับ GitHub Actions |
-| **Debugger / QA** | พีรพล พรหมมิ | - ทดสอบการรัน CI/CD บน GitHub Actions Runner (Ubuntu Linux)<br>- แก้ไขข้อผิดพลาดของ OS Dependencies, Import Path, และ Directory Context<br>- สอบทานความเสถียรของระบบการอ่าน Multiline Secrets และ EasyOCR Model Caching |
+งานใน Sprint 3 ถือว่าเสร็จสมบูรณ์เมื่อผ่านเกณฑ์การทดสอบและถูกระบุสถานะอย่างชัดเจนดังนี้:
+
+* [x] **Streamlit Web Application (`app.py`):** สร้างหน้าเว็บแสดงผลข้อมูลผู้ใช้ สถานะการมอบสิทธิ์ และฟอร์มสำหรับกรอกข้อมูลการตั้งค่าได้อย่างถูกต้อง
+* [ ] **OAuth 2.0 Authorization Flow (`oauth_service.py`):** เชื่อมต่อ OAuth 2.0 Web Client รับ Redirection Code และแลกเปลี่ยนเป็น Refresh Token ได้สมบูรณ์
+* [x] **Encrypted Token Persistence:** บันทึก Refresh Token ที่ผ่านการเข้ารหัสด้วย `Fernet` ลงใน Google Sheets DB (ตาราง Users) ได้โดยอัตโนมัติหลังผู้ใช้กดมอบสิทธิ์
+* [x] **User Mapping Dashboard:** ฟอร์มรับค่า Google Drive Folder ID และ Google Sheet Mapping ID ทำงานร่วมกับ `sheets_db.py` ในการอัปเดตข้อมูลผู้ใช้ได้ถูกต้อง
+* [x] **Secrets & Environment Configuration:** รองรับการอ่านค่าคอนฟิกทั้งจากไฟล์ `.env` สำหรับการรันในเครื่อง Local และ `st.secrets` สำหรับการรันบน Cloud
 
 ---
 
-## 5. ผลการทดสอบระบบและตารางขอบเขตระบบ (QA Testing & Edge Cases Results)
+### 4. แผนการจัดสรรหน้าที่และบทบาทภายในทีม (Team Roles & Responsibilities)
 
-ผู้ทดสอบ (พีรพล - Debugger / QA) ได้ทำการทดสอบรัน Workflow บน **GitHub Actions (Ubuntu Runner)** และระบบส่วนหน้า CLI ตามขอบเขตงานใน Sprint 2 โดยมีผลการทดสอบดังนี้:
+| บทบาท (Role) | สมาชิกที่รับผิดชอบ | ภารกิจหลักใน Sprint 3 |
+| --- | --- | --- |
+| **Planner / Team Leader** | พีรพล พรหมมิ | • ออกแบบสถาปัตยกรรมส่วนติดต่อผู้ใช้ (Web UI) และ OAuth 2.0 Authorization Flow<br>• กำหนดแนวทางการตั้งค่า Google Cloud Console (OAuth Client ID, Consent Screen, Domain Rules)<br>• จัดทำเอกสารสรุปแผนงานและสอบทานความถูกต้องของระบบภาพรวม |
+| **Coder** | ธนธรณ์ ผาลัง | • พัฒนาหน้าเว็บหลัก `app.py` ด้วย Streamlit และสร้างฟอร์มจัดการ User Mapping<br>• เชื่อมต่อ OAuth 2.0 Flow เพื่อดึง Refresh Token และบันทึกเข้ารหัสลง Google Sheets DB<br>• ปรับแต่งการอ่านค่าความลับสลับระหว่าง `.env` และ `st.secrets` |
+| **Debugger / QA** | ธนธรณ์ ผาลัง | • ทดสอบการรัน Streamlit บน Local Environment (`localhost:8501`) และ Streamlit Cloud<br>• วิเคราะห์และแก้ไขข้อผิดพลาด OAuth เช่น `Error 401: invalid_client` และหน้าเตือน Unverified App<br>• ตรวจสอบความถูกต้องของการจัดเก็บข้อมูล Refresh Token และ User Mapping ใน Google Sheets DB |
+
+---
+
+### 5. ผลการทดสอบระบบและตารางขอบเขตระบบ (QA Testing & Edge Cases Results)
+
+ผู้ทดสอบ (ธนธรณ์ - Debugger / QA) ได้ทำการทดสอบระบบส่วนหน้าเว็บ (Streamlit Web UI) และกระบวนการยืนยันตัวตน OAuth 2.0 โดยมีผลการทดสอบดังนี้:
 
 | ลำดับ | กรณีทดสอบ (Test Case) | อินพุตนำเข้า (Test Input) | พฤติกรรมที่คาดหวัง vs ผลการทดสอบจริง | สถานะ (Status) |
-| :---: | :--- | :--- | :--- | :---: |
-| 1 | Google Sheets DB & Batch Operations | `sheets_db.py` (Users, Transactions_Log, OTP_Store) | อ่านข้อมูลแบบ `get_all_records()` และเขียนแบบ `append_rows()` สำเร็จ ระบบประมวลผลราบรื่นโดยไม่ติดปัญหา API Rate Limit (60 req/min) | **PASSED** |
-| 2 | In-Memory Stream & Drive Dual-Key | `drive_service.py` (`file_id`, `name`) | สกัดไฟล์ภาพเข้า `io.BytesIO` เพื่อประมวลผล OCR และเปลี่ยนชื่อไฟล์ผ่าน `file_id` บน Google Drive ได้โดยไม่ต้องเขียนไฟล์ลงดิสก์ | **PASSED** |
-| 3 | Token Encryption & Safety | `security.py` + `MASTER_ENCRYPTION_KEY` | ถอดรหัส Refresh Token ของผู้ใช้ผ่าน `Fernet` ได้ถูกต้อง และสามารถอ่าน `GCP_SERVICE_ACCOUNT_KEY` แบบ Multiline JSON จาก Environment Variable เข้า Memory ได้โดยตรง | **PASSED** |
-| 4 | External Rename Tracking | `renamer_service.py` (ไฟล์ที่ `file_id` ตรงกัน แต่ `name` บน Drive เปลี่ยนไป) | ระบบตรวจจับได้ว่าไฟล์ถูกเปลี่ยนชื่อจากภายนอก จึงทำการ Flag สถานะ `EXTERNAL_RENAMED` ลงใน `Transactions_Log` ก่อนแมปชื่อใหม่ได้ถูกต้อง | **PASSED** |
-| 5 | CLI Entrypoint & Dry-Run | `python main.py --all_users --dry_run` และ `--user_email` | สคริปต์สแกนผู้ใช้ตามอาร์กิวเมนต์ที่ระบุ และจำลองการประมวลผลโดยไม่มีการเปลี่ยนชื่อไฟล์จริงบน Google Drive เมื่อเปิดโหมด `--dry_run` | **PASSED** |
-| 6 | Linux System Dependencies Compatibility | Runner: `ubuntu-latest` | อัปเดตแพ็กเกจใน Workflow เป็น `libgl1` และ `libglib2.0-0` ทดแทน `libgl1-mesa-glx` ที่ตกรุ่น แก้ไขปัญหา Build Error (`exit code 100`) ทำให้ OpenCV/EasyOCR ทำงานบน Linux ได้สำเร็จ | **PASSED** |
-| 7 | Working Directory & Python Import Path | `.github/workflows/auto_rename.yml` | กำหนด `working-directory: rockspec-ocr` และใส่ `PYTHONPATH: .` ในขั้นตอน `pytest` แก้ปัญหาหา `requirements.txt` ไม่เจอ และปัญหา `ModuleNotFoundError: No module named 'src'` | **PASSED** |
-| 8 | Secrets Integration & Automated Tests | GitHub Repository Secrets | เพิ่ม `pytest` ในขั้นตอนติดตั้ง Dependencies และดึงค่า Secrets ทั้ง 6 ตัวเข้า Environment Variable ได้ครบถ้วน แก้ปัญหา `[CRITICAL ERROR] ไม่พบ GCP_SERVICE_ACCOUNT_KEY` | **PASSED** |
-| 9 | EasyOCR Model Caching Optimization | สเต็ป `actions/cache@v4` ที่ `~/.EasyOCR` | ระบบทำการบันทึก Cache ของ CRAFT Detection Model ไว้ ทำให้การรันรอบถัดไปไม่ต้องดาวน์โหลดโมเดลใหม่ ช่วยลดเวลาการทำงานของ Runner อย่างมีประสิทธิภาพ | **PASSED** |
+| --- | --- | --- | --- | --- |
+| **1** | **Streamlit Local Launch & Email Prompt** | `streamlit run app.py` บน Terminal | ระบบแสดงข้อความต้อนรับรับค่า Email ใน Terminal สามารถกด Enter เพื่อข้ามและเปิดพอร์ต `http://localhost:8501` ได้สำเร็จ | **PASSED** |
+| **2** | **OAuth Authorization Link Generation** | กดปุ่ม "คลิกที่นี่เพื่อมอบสิทธิ์ Access Google Drive" | ระบบสร้าง URL เพื่อ Redirect ผู้ใช้ไปยังหน้าล็อกอินและขอสิทธิ์การใช้งานจาก Google OAuth 2.0 ได้ถูกต้อง | **PASSED** |
+| **3** | **OAuth Client ID & Error 401 Handling** | บัญชีผู้ใช้กดมอบสิทธิ์โดยที่ยังไม่ตั้งค่า Credentials | ตรวจพบ `Error 401: invalid_client` เนื่องจากไม่มี Client ID สั่งแก้ไขโดยสร้าง OAuth Client ID และระบุ Redirect URI เป็น `http://localhost:8501` แก้ไขสำเร็จ | **PASSED** |
+| **4** | **OAuth Consent Screen & Internal Domain** | บัญชีผู้ใช้ `@kkumail.com` / `@kku.ac.th` | ตั้งค่า User Type เป็น Internal / Test Users เพื่อให้บุคลากรในมหาวิทยาลัยกดมอบสิทธิ์เข้าใช้งานได้โดยไม่ติดบล็อก | **PASSED** |
+| **5** | **Encrypted Refresh Token Storage** | Callback authorization code จาก Google | ระบบเปลี่ยน Code เป็น Refresh Token นำไปเข้ารหัสผ่าน `Fernet` และอัปเดตลงตาราง `Users` ใน Google Sheets DB สำเร็จ | **PASSED** |
+| **6** | **User Mapping Settings Update** | กรอก Google Drive Folder ID และ Sheet Mapping URL ใน `app.py` | ฟอร์มทำการตรวจสอบความถูกต้องและบันทึกค่าลงฐานข้อมูล Google Sheets เพื่อให้สคริปต์หลังบ้านนำไปใช้งานต่อได้ถูกต้อง | **PASSED** |
+| **7** | **Streamlit Secrets Integration** | ตั้งค่า Secrets ใน Streamlit Community Cloud | ระบบสามารถอ่านค่า `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` จาก `st.secrets` แทนไฟล์ `.env` ได้อย่างไม่มีปัญหา | **PASSED** |
 
 ---
 
-## 6. สรุปบทเรียนประจำ Sprint (Sprint Retrospective)
+### 6. สรุปบทเรียนประจำ Sprint (Sprint Retrospective)
 
 ### 🌟 Wow! (จุดเด่นที่ทำได้ดีมาก)
-1. **In-Memory Stream & Dual-Key Engine:** การดึงภาพประมวลผลผ่าน `io.BytesIO` ร่วมกับการใช้อ้างอิง `file_id` ช่วยลด Disk I/O บน Cloud Runner ได้อย่างดี และติดตามไฟล์ที่ถูกเปลี่ยนชื่อจากภายนอก (`EXTERNAL_RENAMED`) ได้อย่างแม่นยำ
-2. **Secure Headless CI/CD Pipeline:** การปรับปรุงสคริปต์ให้อ่าน Secrets จาก Environment Variable ตรงเข้า Memory ใน Python ทำให้ไม่ต้องเขียนไฟล์ Credentials (เช่น Service Account JSON) ลงดิสก์ของ GitHub Actions ป้องกันการรั่วไหลของข้อมูลสำคัญ
-3. **Optimized Runner Performance:** การทำ Caching สำหรับ Pip Dependencies และ EasyOCR Model (`~/.EasyOCR`) ร่วมกับการตั้งค่า Concurrency Lock ช่วยให้ระบบรันได้รวดเร็ว เซฟเวลาของ Runner และป้องกัน Race Condition เมื่อมีการสั่งรันซ้ำ
 
-### 💡 Whoops! (ปัญหาที่พบและแนวทางการแก้ไข)
-1. **ปัญหาชื่อแพ็กเกจ OpenCV บน Ubuntu Runner (Linux OS Mismatch):**
-   - *ปัญหา:* สคริปต์ใน CI สั่งติดตั้ง `libgl1-mesa-glx` ซึ่งล้าสมัยใน Ubuntu เวอร์ชั่นใหม่ ทำให้เกิด Error `Process completed with exit code 100`
-   - *แนวทางแก้ไข:* แก้ไขไฟล์ `.github/workflows/auto_rename.yml` โดยอัปเดตชื่อแพ็กเกจระบบเป็น `libgl1` และ `libglib2.0-0`
-2. **ปัญหา Directory Context และ Python Import Path บน CI:**
-   - *ปัญหา:* โครงสร้างโปรเจกต์เก็บบน GitHub โดยย้ายโฟลเดอร์ `.github` ไว้ที่ Root แต่โค้ดจริงอยู่ในโฟลเดอร์ย่อย `rockspec-ocr` ส่งผลให้ `pip install` หา `requirements.txt` ไม่เจอ และ `pytest` หาโมเดล `src` ไม่เจอ (`ModuleNotFoundError`)
-   - *แนวทางแก้ไข:* กำหนด `defaults.run.working-directory: rockspec-ocr` ใน Job และระบุ `PYTHONPATH: .` ในขั้นตอนรัน `pytest`
-3. **ปัญหาการดาวน์โหลด EasyOCR Model ซ้ำทุกรอบการรัน:**
-   - *ปัญหา:* GitHub Actions สร้าง Virtual Machine เครื่องใหม่แบบสะอาดบริสุทธิ์ทุกครั้ง ทำให้ EasyOCR ต้องโหลด Detection Model (CRAFT) ขนาดใหญ่ใหม่ทุกรอบ ส่งผลให้เสียเวลาประมวลผล
-   - *แนวทางแก้ไข:* เพิ่ม Step `actions/cache@v4` โดยกำหนด Target Path ไปที่ `~/.EasyOCR` เพื่อดึงไฟล์โมเดลจาก Cache มาใช้ซ้ำได้ทันที
+1. **Seamless Frontend-to-DB Authentication Persistence:** การเชื่อมโยง OAuth 2.0 เข้ากับ Streamlit ช่วยให้ผู้ใช้งานกดมอบสิทธิ์ผ่านหน้าเว็บเพียงครั้งเดียว ระบบจะทำการดึงและเข้ารหัส Refresh Token บันทึกลง Google Sheets DB โดยอัตโนมัติ ทำให้สคริปต์หลังบ้าน (GitHub Actions) นำ Token ไปใช้งานต่อเนื่องได้ทันทีโดยที่ผู้ใช้ไม่ต้องล็อกอินซ้ำ
+2. **Flexible Multi-Environment Support:** โครงสร้างโค้ดส่วนการดึงค่าความลับถูกออกแบบให้ยืดหยุ่น โดยสามารถอ่านค่าจากไฟล์ `.env` ในการรันในเครื่อง Local
+3. **Optimized Organization Scope Configuration:** การเลือกตั้งค่า OAuth Consent Screen แบบ Test Users ช่วยตัดปัญหาความยุ่งยากและระยะเวลาในการส่งตรวจสอบ Google Verification ทำให้ทีมงานสามารถทดสอบและเปิดให้ผู้ใช้กลุ่มเป้าหมายใช้งานได้ทันที
+
+---
+
+### 💡 Whoops! (ปัญหาที่พบ)
+
+1. **ปัญหาข้อผิดพลาด Error 401: invalid_client ในช่วงเริ่มต้น:**
+* *ปัญหา:* เมื่อผู้ใช้กดปุ่มมอบสิทธิ์ในหน้าเว็บ ระบบแสดงข้อผิดพลาด `Error 401: invalid_client (The OAuth client was not found)`
+
+
+2. **ข้อจำกัดในการประมวลผลทันทีแบบ Real-time:**
+* *ปัญหา:* ผู้ใช้งานที่อัปโหลดภาพถ่าย SEM ขึ้น Google Drive ต้องรอรอบเวลาการประมวลผลของ Cron Job บน GitHub Actions หรือต้องให้ Admin สั่งรัน Manual Trigger ผ่าน CLI
