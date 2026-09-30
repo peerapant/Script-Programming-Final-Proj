@@ -1,18 +1,19 @@
-## เอกสารแผนงาน สถาปัตยกรรม และรายงานผลการทดสอบประจำ Sprint 3 (Final Release)
+นี่คือเนื้อหาทั้งหมดในรูปแบบ **Markdown (.md)** ซึ่งสามารถคัดลอกเอาไปวางในไฟล์บันทึกเป็น `SPRINT3_REPORT.md` ได้ทันทีครับ:
 
-**ชื่อโปรเจกต์:** ระบบประมวลผลและเปลี่ยนชื่อไฟล์ภาพถ่ายกล้องจุลทรรศน์อิเล็กตรอนอัตโนมัติ (SEM Rock Image Renamer / RockSpec OCR)
+```markdown
+# เอกสารแผนงาน สถาปัตยกรรม และรายงานผลการทดสอบประจำ Sprint 3 (Final Release)
 
-**วิชา:** CP352301 Script Programming | **ภาคการศึกษา:** 1/2569
-
+**ชื่อโปรเจกต์:** ระบบประมวลผลและเปลี่ยนชื่อไฟล์ภาพถ่ายกล้องจุลทรรศน์อิเล็กตรอนอัตโนมัติ (SEM Rock Image Renamer / RockSpec OCR)  
+**วิชา:** CP352301 Script Programming | **ภาคการศึกษา:** 1/2569  
 **ระยะเวลา:** Sprint 3 (สัปดาห์ที่ 14–15: In-Memory Cloud Stream Pipeline, Smart Point/Zoom Calculation & Multi-Channel Reporting)
 
 ---
 
 ### 1. วัตถุประสงค์และขอบเขตโครงการ (Project Purpose & Scope)
 
-ยกระดับระบบจาก Sprint 2 ให้กลายเป็น **Cloud-Native Automation Pipeline** เต็มรูปแบบ ทำงานแบบ ไร้แผ่นดิสก์ (Diskless In-Memory Execution) ผ่าน Google Cloud APIs โดยดึงและเปลี่ยนชื่อไฟล์ภาพถ่ายทางธรณีวิทยาบน Google Drive และบันทึกประวัติลง Google Sheets DB โดยมีขอบเขตการทำงานใน Sprint 3 ดังนี้:
+ยกระดับระบบจาก Sprint 2 ให้กลายเป็น **Cloud-Native Automation Pipeline** เต็มรูปแบบ ทำงานแบบไร้แผ่นดิสก์ (Diskless In-Memory Execution) ผ่าน Google Cloud APIs โดยดึงและเปลี่ยนชื่อไฟล์ภาพถ่ายทางธรณีวิทยาบน Google Drive และบันทึกประวัติลง Google Sheets DB โดยมีขอบเขตการทำงานใน Sprint 3 ดังนี้:
 
-* พัฒนา **In-Memory Stream Processing (`ImageOCRProcessor` & `GoogleDriveService`)** ดาวน์โหลดไฟล์ภาพผ่าน `io.BytesIO` เพื่อป้อนเข้า OpenCV/EasyOCR โดยไม่ต้องเขียนไฟล์ชั่วคราวลงใน ดิสก์ของ Runner
+* พัฒนา **In-Memory Stream Processing (`ImageOCRProcessor` & `GoogleDriveService`)** ดาวน์โหลดไฟล์ภาพผ่าน `io.BytesIO` เพื่อป้อนเข้า OpenCV/EasyOCR โดยไม่ต้องเขียนไฟล์ชั่วคราวลงในดิสก์ของ Runner
 * พัฒนา **Smart Point & Zoom Sequence Algorithm** คำนวณลำดับจุดถ่ายภาพ (Point) และระดับการซูม (Zoom) อัตโนมัติ โดยตรวจจับการเปลี่ยนค่า Rock ID และการลดลงของกำลังขยาย (`current_mag_val < prev_mag_val`) ร่วมกับการทำ Natural Sorting (`1.tif`, `1_001.tif`, `1_002.tif`, `2.tif`)
 * พัฒนา **Regex Subfolder & File Filtering (`^\d+(_\d+)*$`)** เพื่อคัดกรองเฉพาะไฟล์ภาพรหัสดั้งเดิม และข้ามโฟลเดอร์หรือไฟล์ที่ประมวลผลเสร็จสิ้นแล้วโดยอัตโนมัติ
 * เพิ่มระบบ **Dual-Key External Rename Detection (`check_dual_key_status`)** ตรวจสอบย้อนกลับระหว่าง `Drive_File_ID` กับ `Transactions_Log` หากชื่อไฟล์บน Drive เปลี่ยนไปจาก Log ล่าสุด จะทำ Flag สถานะ `EXTERNAL_RENAMED` ลงในระบบ
@@ -103,7 +104,7 @@
 | **5** | **Dual-Key External Rename Detection** | `file_id` ตรงกับ Log แต่ชื่อบน Drive ถูกแก้ไขภายนอก | ฟังก์ชัน `check_dual_key_status` ตรวจพบความต่าง และสั่ง `flag_external_renamed` ลงใน Google Sheets DB ได้สำเร็จ | **PASSED** |
 | **6** | **Batch Transaction Logging (`append_rows`)** | รายการ Log สะสมของแต่ละผู้ใช้ `new_audit_logs` | ระบบรวบยอดเขียนข้อมูลลง Tab `Transactions_Log` ครั้งเดียวด้วย `append_rows()` ช่วยป้องกันปัญหา API Rate Limit (60 req/min) | **PASSED** |
 | **7** | **SMTP Email Gateway Dispatch** | ผลประมวลผลการเปลี่ยนชื่อสำเร็จ 5 รายการ ไม่สำเร็จ 1 รายการ | `EmailGateway` เชื่อมต่อ `smtp.gmail.com:587` ส่งอีเมล HTML สรุปยอดแยกตามโฟลเดอร์ย่อยถึงอีเมลผู้รับสำเร็จ | **PASSED** |
-| **8** | **Fernet Security Encryption/Decryption** | Master Key + Plain Refresh Token | `SecurityEngine` สามารถ เข้ารหัส และ ถอดรหัส Refresh Token ของผู้ใช้ได้อย่างถูกต้องด้วยอัลกอริทึม Fernet | **PASSED** |
+| **8** | **Fernet Security Encryption/Decryption** | Master Key + Plain Refresh Token | `SecurityEngine` สามารถเข้ารหัสและถอดรหัส Refresh Token ของผู้ใช้ได้อย่างถูกต้องด้วยอัลกอริทึม Fernet | **PASSED** |
 | **9** | **Timezone Alignment (UTC+7 Thailand Time)** | เวลาบันทึก Log ในสคริปต์ Pipeline | ระบบใช้ `datetime.now(timezone(timedelta(hours=7)))` บันทึกเวลามาตรฐานประเทศไทย (ICT) ลงใน Log ได้ตรงเป๊ะ | **PASSED** |
 
 ---
@@ -133,3 +134,14 @@
 3. **ปัญหา Timezone บน Cloud Runner ไม่ตรงกับเวลาไทย:**
 * *ปัญหา:* เครื่อง Cloud Runner รันด้วยเวลามาตรฐาน UTC ทำให้เวลาใน `Transactions_Log` ช้ากว่าเวลาจริงในประเทศไทย 7 ชั่วโมง
 * *แนวทางแก้ไข:* กำหนดโครงสร้าง `thailand_tz = timezone(timedelta(hours=7))` แล้วส่งเข้า `datetime.now(thailand_tz)` ก่อนแปลงเป็น string รูปแบบ `YYYY-MM-DD HH:MM:SS`
+
+
+
+```
+
+---
+
+💡 **คำแนะนำเพิ่มเติม:** 
+คุณสามารถนำโค้ดในกล่องด้านบนไปบันทึกใส่ไฟล์ชื่อ `SPRINT3_REPORT.md` บน VS Code หรืออัปโหลดไว้ที่หน้าแรกของ GitHub Repository ได้ทันทีครับ
+
+```
