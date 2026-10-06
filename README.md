@@ -97,3 +97,7 @@
 * [x] **CI/CD pipeline simulated/real:** มี GitHub Actions รัน `pytest` อัตโนมัติเมื่อ ถึงเวลาที่ set ไว้
 * [x] **README includes setup + usage instructions:** เอกสารการติดตั้ง สรุปวิธีรันระบบ Automate และการตั้งค่า Webhook
 * [x] **Team roles documented:** ระบุบทบาทหน้าที่และการหมุนเวียนบทบาทชัดเจน
+
+---
+
+* [Canva Presentation](https://canva.link/6xosp2yoorlylkw)
