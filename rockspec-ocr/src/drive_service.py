@@ -1,6 +1,7 @@
 import io
 from typing import Any, Dict, List, Tuple
 from google.oauth2.service_account import Credentials
+from google.oauth2.credentials import Credentials as UserCredentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 
@@ -11,6 +12,21 @@ class GoogleDriveService:
     def __init__(self, service_account_info: Dict[str, Any]):
         creds = Credentials.from_service_account_info(service_account_info, scopes=self.SCOPES)
         self.service = build('drive', 'v3', credentials=creds)
+
+    @classmethod
+    def create_from_refresh_token(cls, client_id: str, client_secret: str, refresh_token: str) -> "GoogleDriveService":
+        """[ส่วนที่เพิ่มใหม่สำหรับ Step 2] สร้าง Instance โดยใช้ OAuth Refresh Token ของผู้ใช้งาน"""
+        creds = UserCredentials(
+            token=None,
+            refresh_token=refresh_token,
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=client_id,
+            client_secret=client_secret,
+            scopes=cls.SCOPES
+        )
+        instance = cls.__new__(cls)
+        instance.service = build('drive', 'v3', credentials=creds)
+        return instance
 
     def list_subfolders(self, parent_folder_id: str) -> List[Dict[str, str]]:
         """ดึงรายชื่อโฟลเดอร์ย่อยใน Base Folder (เช่น โฟลเดอร์ระบุวันที่)"""
