@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RockSpec OCR - วิธีการใช้งาน</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- แถบเมนูด้านบนที่ยึดติดหัวเว็บ (Pinned Navbar) -->
+    <div class="top-navbar">
+        <a href="/home" class="pill-btn blue-btn">หน้าหลัก</a>
+        <button type="button" class="pill-btn grey-btn" onclick="openLogoutModal()">ออกจากระบบ</button>
+    </div>
+
+    <!-- Modal ยืนยันการออกจากระบบ -->
+    <div id="logoutModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card animated-card">
+            <h3>คุณต้องการออกจากระบบหรือไม่</h3>
+            <div class="modal-actions">
+                <button type="button" class="pill-btn grey-btn" onclick="closeLogoutModal()">ยกเลิก</button>
+                <a href="/logout" class="pill-btn red-btn">ออกจากระบบ</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="vibrant-card animated-card home-card" style="text-align: left; max-width: 800px !important;">
+        <h1 class="main-title" style="text-align: center; font-size: 1.8rem; margin-bottom: 0.5rem;">คู่มือการใช้งานระบบ</h1>
+        <p class="sub-title" style="text-align: center; margin-bottom: 2rem;">คู่มือการตั้งค่าและใช้งานระบบแปลงชื่อไฟล์ภาพอัตโนมัติทีละขั้นตอนสำหรับผู้เริ่มต้น</p>
+
+        <!-- Step 1 -->
+        <div class="tutorial-step">
+            <div class="step-badge">ขั้นตอนที่ 1 : ทำสำเนาเทมเพลต Google Sheet</div>
+            <p class="step-desc">
+                เตรียมไฟล์ Google Sheet สำหรับเก็บรหัสอ้างอิงและชื่อตัวอย่างหิน โดยทำตามขั้นตอนดังนี้:
+                    <ol>
+                        <li class="step-desc">คลิกลิงก์เทมเพลตกลางของระบบ <a href="https://docs.google.com/spreadsheets/d/1DAspGTPqojCV6SPFDxhlMPly_wS6SmNE4R3l39Cayxk/edit?gid=485454031#gid=485454031" target="_blank">ที่นี่</a> </li>
+                        <li class="step-desc">ไปที่เมนู ไฟล์ (File) ➔ ทำสำเนา (Make a copy)</li>
+                        <li class="step-desc">ตั้งชื่อไฟล์ใหม่ตามต้องการใน Google Drive ของคุณ</li>
+                    </ol>
+            </p>
+        </div>
+
+        <div class="step-divider"></div>
+
+        <!-- Step 2 -->
+        <div class="tutorial-step">
+            <div class="step-badge">ขั้นตอนที่ 2 : สร้างโฟลเดอร์หลักและโฟลเดอร์ย่อยสำหรับเก็บไฟล์ภาพ</div>
+            <p class="step-desc">
+                <ol>
+                    <li class="step-desc">ไปที่ <a href="https://drive.google.com" target="_blank">Google Drive</a></li>
+                    <li class="step-desc">สร้างโฟลเดอร์ใหม่ สำหรับเป็นโฟลเดอร์หลัก ภายในโฟลเดอร์ให้สร้างโฟลเดอร์ย่อยโดยตั้งชื่อตามรูปแบบวันที่ ddmmyy เช่น <b>010124</b> และนำไฟล์ภาพถ่าย (รองรับสกุล .tif, .tiff) เข้าไปเก็บไว้ โดยไฟล์ภาพต้องเป็นหมายเลข ID ตัวอย่าง (เช่น <code>1.tif</code>, <code>1_001.tif</code>, <code>2.tif</code>)</li>
+                </ol>
+            </p>
+        </div>
+
+        <div class="step-divider"></div>
+
+        <!-- Step 3 -->
+        <div class="tutorial-step">
+            <div class="step-badge">ขั้นตอนที่ 3 : แชร์สิทธิ์ให้ Service Account เป็นผู้เขียน</div>
+            <p class="step-desc">
+                เพื่อให้ระบบสามารถอ่านไฟล์และแก้ไขชื่อภาพให้คุณได้อัตโนมัติ
+                <ol>
+                    <li class="step-desc">Copy Service Account email <b>rockspec-bot@rockspec-ocr-project.iam.gserviceaccount.com</b></li>
+                    <li class="step-desc">ไปที่ Google Drive โฟลเดอร์หลักที่สร้างขึ้น</li>
+                    <li class="step-desc">คลิกขวาที่โฟลเดอร์หลักของคุณบน Google Drive แล้วเลือก "แชร์" (Share)</li>
+                    <li class="step-desc">ในช่อง "เพิ่มผู้ใช้และกลุ่ม" (Add people and groups) ให้ใส่อีเมล Service Account ของระบบ</li>
+                    <li class="step-desc">ตั้งสิทธิ์เป็น "ผู้แก้ไข" (Editor) แล้วคลิก "ส่ง" (Send)</li>
+                    <li class="step-desc">ตรวจสอบให้แน่ใจว่า Service Account มีสิทธิ์เป็นผู้แก้ไขในโฟลเดอร์หลักและโฟลเดอร์ย่อยทั้งหมด</li>
+                    <li class="step-desc">ทำการแชร์สิทธิ์ให้ Service Account เป็นผู้แก้ไขในไฟล์ Google Sheet ที่ทำสำเนาไว้ด้วย</li>
+                    <li class="step-desc">ตรวจสอบให้แน่ใจว่าไฟล์ Google Sheet ที่ทำสำเนาไว้มีสิทธิ์เป็นผู้แก้ไข (Editor) ให้กับ Service Account แล้ว</li>
+                </ol>
+            </p>
+        </div>
+
+        <div class="step-divider"></div>
+
+        <!-- Step 4 -->
+        <div class="tutorial-step">
+            <div class="step-badge">ขั้นตอนที่ 4 : ลงทะเบียนลิงก์ในเว็บไซต์นี้</div>
+            <p class="step-desc">
+                <ol >
+                    <li class="step-desc">คัดลอกลิงก์ของ <b>Google Sheet</b> และ <b>Google Drive Folder</b> ของคุณ</li>
+                    <li class="step-desc">ไปที่หน้าหลักของระบบ (Home) และกรอกลิงก์ทั้งสองในฟอร์ม "ลงทะเบียนโฟลเดอร์ใหม่" แล้วคลิกปุ่ม "เพิ่ม"</li>
+                    <li class="step-desc">ระบบจะบันทึกข้อมูลและตรวจสอบสิทธิ์การเข้าถึงของ Service Account ให้คุณโดยอัตโนมัติ</li>
+                    <li class="step-desc">หากระบบตรวจสอบสิทธิ์สำเร็จ จะปรากฏข้อความยืนยันและแสดงรายการโฟลเดอร์ของคุณในหน้าหลัก</li>
+                </ol>
+            </p>
+        </div>
+
+        <div class="step-divider"></div>
+    </div>
+
+    <script>
+        function openLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'flex';
+        }
+        function closeLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

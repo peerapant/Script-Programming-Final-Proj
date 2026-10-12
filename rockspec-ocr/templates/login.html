@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RockSpec OCR - Login</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="vibrant-card animated-card">
+        <h1 class="main-title">RockSpec OCR</h1>
+        <p class="sub-title">ระบบจัดการแปลงชื่อไฟล์ภาพอัตโนมัติ</p>
+
+        {% if error_msg %}
+            <div class="alert error">{{ error_msg }}</div>
+        {% endif %}
+        {% if success_msg %}
+            <div class="alert success">{{ success_msg }}</div>
+        {% endif %}
+
+        {% if not otp_sent %}
+            <!-- ================= เฟสที่ 1: กรอกอีเมล ================= -->
+            <form action="/auth/send-otp" method="POST" class="auth-form">
+                <div class="input-group">
+                    <label for="email">ระบุอีเมลผู้ใช้งาน</label>
+                    <input type="email" id="email" name="email" value="{{ temp_email }}" placeholder="example@gmail.com" required autofocus>
+                </div>
+                <button type="submit" class="pill-btn primary-btn">ขอรับรหัส OTP</button>
+            </form>
+        {% else %}
+            <!-- ================= เฟสที่ 2: กรอกรหัส OTP 6 กล่อง (Auto-Advance) ================= -->
+            <form action="/auth/verify-otp" method="POST" class="auth-form" id="otp-form">
+                <p class="otp-instruction">กรอกรหัส 6 หลักที่ส่งไปยัง<br><b>{{ temp_email }}</b></p>
+                
+                <div class="otp-container">
+                    <input type="text" class="otp-box" maxlength="1" pattern="[0-9]" inputmode="numeric" required autofocus autocomplete="one-time-code">
+                    <input type="text" class="otp-box" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                    <input type="text" class="otp-box" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                    <input type="text" class="otp-box" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                    <input type="text" class="otp-box" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                    <input type="text" class="otp-box" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                </div>
+                
+                <!-- Hidden Input สำหรับรวบรวมค่า OTP ทั้ง 6 ช่องส่งไปหลังบ้าน -->
+                <input type="hidden" id="otp_code" name="otp_code">
+
+                <button type="submit" class="pill-btn primary-btn" style="margin-top: 1rem;">ยืนยัน OTP</button>
+            </form>
+
+            <!-- ปุ่มเปลี่ยนอีเมลและส่งรหัสใหม่ (แยกฟอร์มอิสระและใส่ formnovalidate เพื่อไม่ให้ติดเงื่อนไขบังคับกรอก) -->
+            <div class="footer-links" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem;">
+                <form action="/auth/reset" method="POST" style="display:inline;">
+                    <button type="submit" class="text-link" formnovalidate>เปลี่ยนอีเมล</button>
+                </form>
+                <form action="/auth/resend-otp" method="POST" style="display:inline;">
+                    <button type="submit" class="text-link" formnovalidate>ส่งรหัสใหม่</button>
+                </form>
+</div>
+            
+            <script>
+                const inputs = document.querySelectorAll('.otp-box');
+                const form = document.getElementById('otp-form');
+                const hiddenOtp = document.getElementById('otp_code');
+
+                inputs.forEach((input, index) => {
+                    // บังคับพิมพ์ได้เฉพาะตัวเลข และเลื่อนไปช่องถัดไปอัตโนมัติ
+                    input.addEventListener('input', (e) => {
+                        const value = e.target.value;
+                        if (!/^[0-9]$/.test(value)) {
+                            e.target.value = '';
+                            return;
+                        }
+                        if (value && index < inputs.length - 1) {
+                            inputs[index + 1].focus();
+                        }
+                        updateHiddenOtp();
+                    });
+
+                    // รองรับปุ่ม Backspace เพื่อถอยกลับช่องก่อนหน้า
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Backspace' && !input.value && index > 0) {
+                            inputs[index - 1].focus();
+                        }
+                    });
+
+                    // รองรับการ Copy/Paste รหัส 6 หลักทีเดียวจบ
+                    input.addEventListener('paste', (e) => {
+                        e.preventDefault();
+                        const pasteData = e.clipboardData.getData('text').trim();
+                        if (/^\d{6}$/.test(pasteData)) {
+                            inputs.forEach((box, i) => {
+                                box.value = pasteData[i];
+                            });
+                            inputs[inputs.length - 1].focus();
+                            updateHiddenOtp();
+                        }
+                    });
+                });
+
+                function updateHiddenOtp() {
+                    let code = '';
+                    inputs.forEach(input => code += input.value);
+                    hiddenOtp.value = code;
+                }
+
+                form.addEventListener('submit', (e) => {
+                    updateHiddenOtp();
+                    if (hiddenOtp.value.length !== 6) {
+                        e.preventDefault();
+                        alert('กรุณากรอกรหัส OTP ให้ครบ 6 หลัก');
+                    }
+                });
+            </script>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RockSpec OCR - รายละเอียดโฟลเดอร์</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- แถบเมนูด้านบนที่ยึดติดหัวเว็บ -->
+    <div class="top-navbar">
+        <a href="/home" class="pill-btn blue-btn">หน้าหลัก</a>
+        <a href="/how-to-use" class="pill-btn pink-btn">วิธีการใช้งาน</a>
+        <button type="button" class="pill-btn grey-btn" onclick="openLogoutModal()">ออกจากระบบ</button>
+    </div>
+
+    <!-- Modal ยืนยันการออกจากระบบ -->
+    <div id="logoutModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card animated-card">
+            <h3>คุณต้องการออกจากระบบหรือไม่</h3>
+            <div class="modal-actions">
+                <button type="button" class="pill-btn grey-btn" onclick="closeLogoutModal()">ยกเลิก</button>
+                <a href="/logout" class="pill-btn red-btn">ออกจากระบบ</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="vibrant-card animated-card home-card" style="text-align: left;">
+        <!-- ส่วนหัวแสดงชื่อโฟลเดอร์หลักและปุ่มควบคุม -->
+        <div class="folder-detail-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 class="main-title" style="font-size: 1.5rem; margin: 0;">📁 {{ folder_name }}</h1>
+                <p class="sub-title" style="margin: 0.25rem 0 0 0;">รายชื่อโฟลเดอร์ย่อยและไฟล์ภาพภายใน</p>
+            </div>
+            <div class="folder-header-actions" style="display: flex; gap: 0.5rem; align-items: center;">
+                <a href="#" class="pill-btn small-btn pink-btn" onclick="openUndoModal(); return false;">ย้อนกลับการเปลี่ยนชื่อ</a>
+                <a href="/history" class="pill-btn small-btn grey-btn" onclick="alert('หน้าประวัติการทำงานจะเปิดให้บริการเร็วๆ นี้'); return false;">ประวัติการทำงาน</a>
+            </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #E2E8F0; margin: 1.5rem 0;">
+
+        <!-- รายการโฟลเดอร์ย่อยและรายชื่อไฟล์ -->
+        <div class="section-block">
+            {% if subfolders %}
+                <div class="subfolder-container">
+                    {% for sub in subfolders %}
+                    <div class="subfolder-box">
+                        <div class="subfolder-title">📂 {{ sub.name }}</div>
+                        {% if sub.files %}
+                            <ul class="file-list">
+                                {% for fname in sub.files %}
+                                <li>📄 {{ fname }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="no-files-text">ไม่มีไฟล์ภาพในโฟลเดอร์นี้</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="no-data-text">ไม่พบโฟลเดอร์ย่อยในระบบ</p>
+            {% endif %}
+        </div>
+
+        <div style="margin-top: 2rem; text-align: center;">
+            <a href="/home" class="pill-btn grey-btn" style="text-decoration: none; padding: 0.5rem 2rem;">กลับสู่หน้าหลัก</a>
+        </div>
+    </div>
+
+    <script>
+        function openLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'flex';
+        }
+        function closeLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+    </script>
+    <!-- Modal ระบบย้อนกลับการเปลี่ยนชื่อ (Undo Modal) -->
+    <div id="undoModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card animated-card" style="max-width: 600px; text-align: left;">
+            <h3 style="text-align: center; margin-bottom: 1rem;">เลือกวันที่ต้องการย้อนกลับการเปลี่ยนชื่อ</h3>
+            
+            {% if undo_groups %}
+                <div class="undo-date-list" style="max-height: 250px; overflow-y: auto; margin-bottom: 1.25rem;">
+                    {% for date_str, subfolders_dict in undo_groups.items() %}
+                    <div class="undo-date-item" style="border: 1px solid #E2E8F0; border-radius: 12px; margin-bottom: 0.75rem; padding: 0.75rem 1rem; background: #F8FAFC;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleUndoPreview('preview-{{ loop.index }}')">
+                            <span style="font-weight: 600; color: #1E293B;">วันที่: {{ date_str }}</span>
+                            <span style="font-size: 0.85rem; color: #3B82F6;">คลิกดูตัวอย่าง</span>
+                        </div>
+                        
+                        <!-- ตัวอย่าง 3 ไฟล์แรกของแต่ละโฟลเดอร์ย่อย -->
+                        <div id="preview-{{ loop.index }}" style="display: none; margin-top: 0.75rem; border-top: 1px dashed #CBD5E1; padding-top: 0.5rem;">
+                            {% for sub_name, files in subfolders_dict.items() %}
+                            <div style="font-size: 0.85rem; margin-bottom: 0.4rem;">
+                                <b style="color: #475569;">📁 โฟลเดอร์: {{ sub_name }}</b>
+                                <ul style="margin: 0.2rem 0 0.5rem 1.2rem; padding: 0; color: #334155;">
+                                    {% for f in files %}
+                                    <li><code>{{ f.new_name }}</code> ➔ <span style="color: #166534;">{{ f.original_name }}</span></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endfor %}
+                            
+                            <!-- ฟอร์มยืนยันการย้อนคืนของวันนี้ -->
+                            <form action="/undo/execute" method="POST" onsubmit="return confirmUndo('{{ date_str }}')">
+                                <input type="hidden" name="undo_date" value="{{ date_str }}">
+                                <button type="submit" class="pill-btn small-btn red-btn" style="width: 100%; margin-top: 0.5rem;">เลือกย้อนคืนชื่อของวันที่นี้</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="text-align: center; color: #64748B; font-style: italic; padding: 1.5rem 0;">ไม่พบประวัติการเปลี่ยนชื่อที่สามารถย้อนคืนได้</p>
+            {% endif %}
+
+            <div style="text-align: center; margin-top: 1rem;">
+                <button type="button" class="pill-btn grey-btn" onclick="closeUndoModal()" style="padding: 0.4rem 2rem;">ปิด</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openUndoModal() {
+            document.getElementById('undoModal').style.display = 'flex';
+        }
+        function closeUndoModal() {
+            document.getElementById('undoModal').style.display = 'none';
+        }
+        function toggleUndoPreview(id) {
+            const el = document.getElementById(id);
+            if (el.style.display === 'none') {
+                el.style.display = 'block';
+            } else {
+                el.style.display = 'none';
+            }
+        }
+        function confirmUndo(dateStr) {
+            return confirm("⚠️ คำเตือน: คุณต้องการยืนยันการย้อนคืนชื่อของวันที่ " + dateStr + " หรือไม่?\n\nหากยืนยันแล้ว ระบบจะเปลี่ยนชื่อไฟล์กลับเป็นชื่อเดิมทั้งหมดและจะไม่สามารถย้อนคืนได้อีก!");
+        }
+    </script>
+</body>
+</html>

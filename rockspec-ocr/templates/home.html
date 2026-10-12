@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RockSpec OCR - หน้าหลัก</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- แถบเมนูด้านบนที่ยึดติดหัวเว็บ (Pinned Navbar) -->
+    <div class="top-navbar">
+        <div class="tooltip-container">
+            <a href="/how-to-use" class="pill-btn pink-btn shake-btn" id="howToBtn">วิธีการใช้งาน</a>
+            <div class="tooltip-box" id="howToTooltip">ไม่เคยใช้งานมาก่อน? ดูวิธีการใช้งานได้เลย</div>
+        </div>
+        <button type="button" class="pill-btn grey-btn" onclick="openLogoutModal()">ออกจากระบบ</button>
+    </div>
+
+    <!-- Modal ยืนยันการออกจากระบบ -->
+    <div id="logoutModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card animated-card">
+            <h3>คุณต้องการออกจากระบบหรือไม่</h3>
+            <div class="modal-actions">
+                <button type="button" class="pill-btn grey-btn" onclick="closeLogoutModal()">ยกเลิก</button>
+                <a href="/logout" class="pill-btn red-btn">ออกจากระบบ</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="vibrant-card animated-card home-card">
+        <!-- ส่วนหัวข้อต้อนรับ -->
+        <div class="home-header">
+            <h1 class="main-title" style="font-size: 1.6rem; text-align: left; margin: 0;">สวัสดี {{ user_email }}</h1>
+        </div>
+
+        {% if error_msg %}
+            <div class="alert error" style="margin-top: 1rem;">{{ error_msg }}</div>
+        {% endif %}
+        {% if success_msg %}
+            <div class="alert success" style="margin-top: 1rem;">{{ success_msg }}</div>
+        {% endif %}
+
+        <hr style="border: 0; border-top: 1px solid #E2E8F0; margin: 1.5rem 0;">
+
+        <!-- หัวข้อ โฟลเดอร์ของคุณ (แสดงแค่ชื่อ ไม่มีกรอบ) -->
+        <!-- หัวข้อ โฟลเดอร์ของคุณ -->
+        <div class="section-block">
+            <h3 class="section-title">โฟลเดอร์ของคุณ</h3>
+            <ul class="folder-list">
+                {% for folder in folders %}
+                <li class="folder-item">
+                    <a href="/folder-detail/{{ folder.id }}" class="folder-name-link">📁 {{ folder.name }}</a>
+                    <div class="folder-actions">
+                        <a href="{{ folder.folder_url }}" target="_blank" class="pill-btn small-btn pink-btn">Google Drive</a>
+                        <a href="{{ folder.sheet_url }}" target="_blank" class="pill-btn small-btn blue-btn">Google Sheet</a>
+                    </div>
+                </li>
+                {% else %}
+                <p class="no-data-text">ไม่มีข้อมูล</p>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #E2E8F0; margin: 1.5rem 0;">
+
+        <!-- หัวข้อ ลงทะเบียนโฟลเดอร์ใหม่ (Label กับ Input บรรทัดเดียวกัน) -->
+        <div class="section-block">
+            <h3 class="section-title">ลงทะเบียนโฟลเดอร์ใหม่</h3>
+            <form action="/home/add-folder" method="POST" class="register-form">
+                <div class="inline-input-group">
+                    <label for="sheet_link">ลิงก์ Google Sheet</label>
+                    <input type="text" id="sheet_link" name="sheet_link" class="small-input" placeholder="วางลิงก์ Google Sheet ที่นี่" required>
+                </div>
+                <div class="inline-input-group" style="margin-top: 0.85rem;">
+                    <label for="folder_link">ลิงก์ Google Drive Folder</label>
+                    <input type="text" id="folder_link" name="folder_link" class="small-input" placeholder="วางลิงก์ Google Drive Folder ที่นี่" required>
+                </div>
+                <button type="submit" class="pill-btn primary-btn short-submit-btn" style="margin-top: 1rem; text-align: center;">เพิ่ม</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ฟังก์ชันเปิด-ปิด Modal ออกจากระบบ
+        function openLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'flex';
+        }
+        function closeLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+
+        // ซ่อน Tooltip ของปุ่มวิธีการใช้งานอัตโนมัติหลังจากผ่านไป 5 วินาที
+        setTimeout(() => {
+            const tooltip = document.getElementById('howToTooltip');
+            if (tooltip) {
+                tooltip.style.opacity = '0';
+                tooltip.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => tooltip.remove(), 200);
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
