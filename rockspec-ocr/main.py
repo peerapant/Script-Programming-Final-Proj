@@ -19,6 +19,22 @@ from src.email_gateway import EmailGateway
 from src.notifier import WebhookNotifier
 from src.pipeline import RockSpecCloudPipeline
 from src.sheets_db import GoogleSheetsDB
+from src.security import SecurityEngine
+
+print("--- กำลังเริ่มโหลดระบบ Services ---")
+gcp_key_json = os.getenv("GCP_SERVICE_ACCOUNT_KEY")
+spreadsheet_id = os.getenv("SPREADSHEET_ID")
+master_key = os.getenv("MASTER_ENCRYPTION_KEY") or SecurityEngine.generate_master_key()
+
+print("1. โหลด Key สำเร็จ กำลังเชื่อมต่อ Google Sheets DB...")
+service_account_info = json.loads(gcp_key_json) if gcp_key_json else {}
+
+db = GoogleSheetsDB(spreadsheet_id, service_account_info)
+print("2. เชื่อมต่อ Google Sheets สำเร็จ")
+
+email_gw = EmailGateway(os.getenv("SMTP_USER"), os.getenv("SMTP_PASSWORD"))
+security = SecurityEngine(master_key)
+print("--- โหลด Services ทั้งหมดเสร็จสมบูรณ์ ---")
 
 def main():
     parser = argparse.ArgumentParser(description="RockSpec OCR Cloud Execution Entrypoint")
