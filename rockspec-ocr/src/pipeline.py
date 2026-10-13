@@ -277,7 +277,7 @@ class RockSpecCloudPipeline:
             <ul>
                 {folder_details_html}
             </ul>
-            <p>🔗 ท่านสามารถตรวจสอบประวัติและรายละเอียดเพิ่มเติมได้ที่หน้าเว็บ UI: <a href="https://rockspec-ocr.streamlit.app">RockSpec OCR Web Application</a></p>
+            <p>🔗 ท่านสามารถตรวจสอบประวัติและรายละเอียดเพิ่มเติมได้ที่หน้าเว็บ UI: <a href="https://rockspec-ocr.fly.dev/">RockSpec OCR Web Application</a></p>
             <hr>
             <p><small>RockSpec OCR Automated System - GitHub Actions Execution</small></p>
             """
