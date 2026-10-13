@@ -327,23 +327,16 @@ async def execute_undo_by_date(request: Request, undo_date: str = Form(...)):
     db = get_db()
     undo_service = get_undo_service()
     user_transactions = db.get_user_transactions(user_email)
-    
-    success_count = 0
-    for tx in user_transactions:
-        status = str(tx.get("Status", "")).upper()
-        if status == "UNDONE":
-            continue
-        ts = str(tx.get("Timestamp", ""))
-        date_part = ts.split(" ")[0] if " " in ts else ts
-        if date_part == undo_date:
-            file_id = tx.get("Drive_File_ID")
-            if file_id:
-                ok, msg = undo_service.undo_file_rename(file_id, user_email)
-                if ok:
-                    success_count += 1
-                    
-    if success_count > 0:
-        request.session["success_msg"] = f"ย้อนคืนชื่อไฟล์ของวันที่ {undo_date} สำเร็จจำนวน {success_count} รายการ"
+
+    result = undo_service.undo_batch_by_date(user_email, undo_date, user_transactions)
+
+    if result["success_count"] > 0:
+        request.session["success_msg"] = (
+            f"ย้อนคืนชื่อไฟล์ของวันที่ {undo_date} สำเร็จ {result['success_count']} รายการ"
+            + (f" ไม่สำเร็จ {result['failed_count']} รายการ" if result["failed_count"] > 0 else "")
+        )
+    elif result["total"] > 0:
+        request.session["error_msg"] = f"ย้อนคืนชื่อไฟล์ของวันที่ {undo_date} ไม่สำเร็จเลยสักรายการ"
     else:
         request.session["error_msg"] = "ไม่พบไฟล์ที่สามารถย้อนคืนได้ในวันที่เลือก"
         
