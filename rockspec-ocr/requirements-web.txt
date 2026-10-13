@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+jinja2
+python-multipart
+itsdangerous
+python-dotenv
+requests
+google-api-python-client
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+gspread
+cryptography
