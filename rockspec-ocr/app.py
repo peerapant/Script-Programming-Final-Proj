@@ -290,16 +290,17 @@ async def folder_detail_page(request: Request, folder_id: str):
         for sub in subfolders_raw:
             sub_id = sub.get('id')
             sub_name = sub.get('name')
-            
+
             def get_files():
                 return drive_service.list_image_files(sub_id)
             files_raw = await asyncio.to_thread(get_files) or []
-            file_names = [f.get('name') for f in files_raw]
-            
+            files_data = [{"id": f.get('id'), "name": f.get('name')} for f in files_raw]
+
             subfolders_data.append({
                 "id": sub_id,
                 "name": sub_name,
-                "files": file_names
+                "url": f"https://drive.google.com/drive/folders/{sub_id}",
+                "files": files_data
             })
     except Exception:
         pass

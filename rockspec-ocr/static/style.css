@@ -15,8 +15,14 @@ body {
     min-height: 100vh;
 }
 
-a {
-  text-decoration: none; /* Removes the underline */
+.a-folder, .a-folder:visited {
+    text-decoration: none; /* Removes the underline */
+    color: #1E293B; /* Inherits the color from parent */
+}
+
+.a-folder:hover {
+    text-decoration: underline; /* Adds underline on hover */
+    color: #1E293B; /* Changes color on hover */
 }
 
 /* แถบเมนูด้านบน Pinned Navbar */

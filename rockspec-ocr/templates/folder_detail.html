@@ -29,7 +29,9 @@
         <!-- ส่วนหัวแสดงชื่อโฟลเดอร์หลักและปุ่มควบคุม -->
         <div class="folder-detail-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
             <div>
-                <h1 class="main-title" style="font-size: 1.5rem; margin: 0;" href="{{ folder.folder_url }}">📁 {{ folder_name }}</h1>
+                <h1 class="main-title" style="font-size: 1.5rem; margin: 0;">
+                    📂 <a href="{{ folder_url }}" class="a-folder" target="_blank" >{{ folder_name }}</a>
+                </h1>
                 <p class="sub-title" style="margin: 0.25rem 0 0 0;">รายชื่อโฟลเดอร์ย่อยและไฟล์ภาพภายใน</p>
             </div>
             <div class="folder-header-actions" style="display: flex; gap: 0.5rem; align-items: center;">
@@ -48,11 +50,11 @@
                 <div class="subfolder-container">
                     {% for sub in subfolders %}
                     <div class="subfolder-box">
-                        <a href="{{ sub.url }}" class="subfolder-title">📂 {{ sub.name }}</a>
+                        📂 <a class="a-folder" href="{{ sub.url }}" target="_blank" class="subfolder-title"><b>{{ sub.name }}</b></a>
                         {% if sub.files %}
                             <ul class="file-list">
-                                {% for fname in sub.files %}
-                                <li><a href="{{ sub.url }}/{{ fname }}" target="_blank">📄 {{ fname }}</a></li>
+                                {% for f in sub.files %}
+                                <li>📄 <a class="a-folder" href="https://drive.google.com/file/d/{{ f.id }}/view" target="_blank">{{ f.name }}</a></li>
                                 {% endfor %}
                             </ul>
                         {% else %}
