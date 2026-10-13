@@ -22,12 +22,11 @@ from src.github_gateway import GitHubGateway
 def get_undo_service():
     gcp_key_json = os.getenv("GCP_SERVICE_ACCOUNT_KEY")
     spreadsheet_id = os.getenv("SPREADSHEET_ID")
-    master_key = os.getenv("MASTER_ENCRYPTION_KEY") or SecurityEngine.generate_master_key()
     service_account_info = json.loads(gcp_key_json) if gcp_key_json else {}
     db = GoogleSheetsDB(spreadsheet_id, service_account_info)
+    drive_service = GoogleDriveService(service_account_info)
     email_gw = EmailGateway(os.getenv("SMTP_USER"), os.getenv("SMTP_PASSWORD"))
-    security = SecurityEngine(master_key)
-    return UndoService(db, security, email_gw)
+    return UndoService(db, drive_service, email_gw)
 
 # 1. ต้องประกาศสร้างตัวแปร app ตรงนี้ก่อนเป็นอันดับแรกสุด
 app = FastAPI(title="RockSpec OCR Management System")
