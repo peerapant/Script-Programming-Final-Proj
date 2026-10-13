@@ -1,0 +1,40 @@
+name: Deploy Web App to Fly.io
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "rockspec-ocr/app.py"
+      - "rockspec-ocr/src/**"
+      - "rockspec-ocr/templates/**"
+      - "rockspec-ocr/static/**"
+      - "rockspec-ocr/Dockerfile"
+      - "rockspec-ocr/.dockerignore"
+      - "rockspec-ocr/requirements-web.txt"
+      - "rockspec-ocr/fly.toml"
+  workflow_dispatch: {}
+
+concurrency:
+  group: rockspec-ocr-web-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to Fly.io
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rockspec-ocr
+
+    steps:
+      - name: 📥 Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: 🪰 Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: 🚀 Deploy
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
