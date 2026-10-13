@@ -15,6 +15,10 @@ body {
     min-height: 100vh;
 }
 
+a {
+  text-decoration: none; /* Removes the underline */
+}
+
 /* แถบเมนูด้านบน Pinned Navbar */
 .top-navbar {
     position: fixed;
@@ -529,4 +533,20 @@ input[type="email"]:focus, input[type="text"]:focus {
 /* เพิ่มเติมการแสดงผล Alert ในหน้า Detail */
 .folder-detail-alerts {
     margin-bottom: 1rem;
+}
+
+/* 📌 อนิเมชัน Loading Spinner สำหรับปุ่มขอรับรหัส OTP */
+.spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid #BAE6FD;
+    border-top: 3px solid #3B82F6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

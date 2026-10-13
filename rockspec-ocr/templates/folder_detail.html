@@ -29,15 +29,14 @@
         <!-- ส่วนหัวแสดงชื่อโฟลเดอร์หลักและปุ่มควบคุม -->
         <div class="folder-detail-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
             <div>
-                <h1 class="main-title" style="font-size: 1.5rem; margin: 0;">📁 {{ folder_name }}</h1>
+                <h1 class="main-title" style="font-size: 1.5rem; margin: 0;" href="{{ folder.folder_url }}">📁 {{ folder_name }}</h1>
                 <p class="sub-title" style="margin: 0.25rem 0 0 0;">รายชื่อโฟลเดอร์ย่อยและไฟล์ภาพภายใน</p>
             </div>
             <div class="folder-header-actions" style="display: flex; gap: 0.5rem; align-items: center;">
                 <form action="/trigger/rename-now" method="POST" style="display:inline;" onsubmit="return confirmRenameNow();">
-                    <button type="submit" class="pill-btn small-btn primary-btn">⚡ เปลี่ยนชื่อตอนนี้</button>
+                    <button type="submit" class="pill-btn small-btn primary-btn">เปลี่ยนชื่อตอนนี้</button>
                 </form>
                 <a href="#" class="pill-btn small-btn pink-btn" onclick="openUndoModal(); return false;">ย้อนกลับการเปลี่ยนชื่อ</a>
-                <a href="/history" class="pill-btn small-btn grey-btn" onclick="alert('หน้าประวัติการทำงานจะเปิดให้บริการเร็วๆ นี้'); return false;">ประวัติการทำงาน</a>
             </div>
         </div>
 
@@ -49,11 +48,11 @@
                 <div class="subfolder-container">
                     {% for sub in subfolders %}
                     <div class="subfolder-box">
-                        <div class="subfolder-title">📂 {{ sub.name }}</div>
+                        <a href="{{ sub.url }}" class="subfolder-title">📂 {{ sub.name }}</a>
                         {% if sub.files %}
                             <ul class="file-list">
                                 {% for fname in sub.files %}
-                                <li>📄 {{ fname }}</li>
+                                <li><a href="{{ sub.url }}/{{ fname }}" target="_blank">📄 {{ fname }}</a></li>
                                 {% endfor %}
                             </ul>
                         {% else %}

@@ -20,13 +20,19 @@
 
         {% if not otp_sent %}
             <!-- ================= เฟสที่ 1: กรอกอีเมล ================= -->
-            <form action="/auth/send-otp" method="POST" class="auth-form">
-                <div class="input-group">
-                    <label for="email">ระบุอีเมลผู้ใช้งาน</label>
-                    <input type="email" id="email" name="email" value="{{ temp_email }}" placeholder="example@gmail.com" required autofocus>
-                </div>
-                <button type="submit" class="pill-btn primary-btn">ขอรับรหัส OTP</button>
-            </form>
+        <form action="/auth/send-otp" method="POST" class="auth-form" id="email-form" onsubmit="handleEmailSubmit(event)">
+            <div class="input-group">
+                <label for="email" style="text-align: center;">อีเมล (Email)</label>
+                <input type="email" id="email" name="email" placeholder="example@kkumail.com" required autofocus>
+            </div>
+            <button type="submit" id="submit-btn" class="pill-btn primary-btn">ขอรับรหัส OTP</button>
+            
+            <!-- แสดงขึ้นมาเมื่อกด Submit -->
+            <div id="loading-spinner" style="display: none; align-items: center; justify-content: center; gap: 10px; margin-top: 1rem;">
+                <div class="spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0;"></div>
+                <p style="font-size: 0.85rem; color: #64748B; margin: 0;">กำลังส่งรหัส OTP กรุณารอสักครู่...</p>
+            </div>
+        </form>
         {% else %}
             <!-- ================= เฟสที่ 2: กรอกรหัส OTP 6 กล่อง (Auto-Advance) ================= -->
             <form action="/auth/verify-otp" method="POST" class="auth-form" id="otp-form">
@@ -113,5 +119,23 @@
             </script>
         {% endif %}
     </div>
+    <script>
+        function handleEmailSubmit(event) {
+            const btn = document.getElementById('submit-btn');
+            const spinner = document.getElementById('loading-spinner');
+            
+            const emailInput = document.getElementById('email');
+            if (emailInput && emailInput.value.trim() !== '') {
+                btn.disabled = true;
+                btn.style.opacity = '0.6';
+                btn.style.cursor = 'not-allowed';
+                btn.innerText = 'กำลังส่ง...';
+                if (spinner) {
+                    spinner.style.display = 'flex';
+                }
+            }
+            return true;
+        }
+    </script>
 </body>
 </html>
