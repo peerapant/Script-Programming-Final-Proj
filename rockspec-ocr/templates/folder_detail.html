@@ -33,6 +33,9 @@
                 <p class="sub-title" style="margin: 0.25rem 0 0 0;">รายชื่อโฟลเดอร์ย่อยและไฟล์ภาพภายใน</p>
             </div>
             <div class="folder-header-actions" style="display: flex; gap: 0.5rem; align-items: center;">
+                <form action="/trigger/rename-now" method="POST" style="display:inline;" onsubmit="return confirmRenameNow();">
+                    <button type="submit" class="pill-btn small-btn primary-btn">⚡ เปลี่ยนชื่อตอนนี้</button>
+                </form>
                 <a href="#" class="pill-btn small-btn pink-btn" onclick="openUndoModal(); return false;">ย้อนกลับการเปลี่ยนชื่อ</a>
                 <a href="/history" class="pill-btn small-btn grey-btn" onclick="alert('หน้าประวัติการทำงานจะเปิดให้บริการเร็วๆ นี้'); return false;">ประวัติการทำงาน</a>
             </div>
@@ -75,6 +78,9 @@
         }
         function closeLogoutModal() {
             document.getElementById('logoutModal').style.display = 'none';
+        }
+        function confirmRenameNow() {
+            return confirm("ต้องการสั่งให้ระบบเริ่มเปลี่ยนชื่อไฟล์ในโฟลเดอร์นี้ทันทีหรือไม่?\n\nระบบจะไปประมวลผลเบื้องหลังผ่าน GitHub Actions อาจใช้เวลาสักครู่กว่าจะเสร็จ");
         }
     </script>
     <!-- Modal ระบบย้อนกลับการเปลี่ยนชื่อ (Undo Modal) -->

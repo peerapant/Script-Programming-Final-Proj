@@ -16,6 +16,8 @@ from src.sheets_db import GoogleSheetsDB
 from src.security import SecurityEngine
 from src.auth_service import AuthService
 from src.undo_service import UndoService
+from src.url_parser import URLParser
+from src.github_gateway import GitHubGateway
 
 def get_undo_service():
     gcp_key_json = os.getenv("GCP_SERVICE_ACCOUNT_KEY")
@@ -58,6 +60,9 @@ def get_drive_service():
     gcp_key_json = os.getenv("GCP_SERVICE_ACCOUNT_KEY")
     service_account_info = json.loads(gcp_key_json) if gcp_key_json else {}
     return GoogleDriveService(service_account_info)
+
+def get_github_gateway():
+    return GitHubGateway()
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -187,6 +192,35 @@ async def home_page(request: Request):
         "success_msg": success_msg
     })
 
+@app.post("/home/add-folder")
+async def add_folder(request: Request, sheet_link: str = Form(...), folder_link: str = Form(...)):
+    """รับลิงก์ Google Sheet และ Google Drive Folder จากฟอร์มลงทะเบียนโฟลเดอร์ใหม่ สกัด ID แล้วบันทึกลงฐานข้อมูล"""
+    user_email = request.session.get("user_email")
+    if not user_email:
+        return RedirectResponse(url="/", status_code=303)
+
+    folder_id = URLParser.extract_drive_folder_id(folder_link)
+    sheet_id = URLParser.extract_spreadsheet_id(sheet_link)
+
+    if not folder_id or not sheet_id:
+        request.session["error_msg"] = "ลิงก์ที่กรอกไม่ถูกต้อง กรุณาตรวจสอบลิงก์ Google Drive Folder และ Google Sheet อีกครั้ง"
+        return RedirectResponse(url="/home", status_code=303)
+
+    db = get_db()
+    save_ok = db.upsert_user_config(
+        email=user_email,
+        drive_folder_id=folder_id,
+        mapping_excel_id=sheet_id,
+    )
+
+    if save_ok:
+        request.session["success_msg"] = "ลงทะเบียนโฟลเดอร์ใหม่เรียบร้อยแล้ว"
+    else:
+        request.session["error_msg"] = "ไม่สามารถบันทึกข้อมูลโฟลเดอร์ได้ กรุณาลองใหม่อีกครั้ง"
+
+    return RedirectResponse(url="/home", status_code=303)
+
+
 @app.get("/how-to-use", response_class=HTMLResponse)
 async def how_to_use_page(request: Request):
     """หน้าวิธีการใช้งาน (How to use)"""
@@ -314,5 +348,24 @@ async def execute_undo_by_date(request: Request, undo_date: str = Form(...)):
     else:
         request.session["error_msg"] = "ไม่พบไฟล์ที่สามารถย้อนคืนได้ในวันที่เลือก"
         
+    referer = request.headers.get("referer", "/home")
+    return RedirectResponse(url=referer, status_code=303)
+
+
+@app.post("/trigger/rename-now")
+async def trigger_rename_now(request: Request):
+    """ปุ่ม 'เปลี่ยนชื่อตอนนี้': สั่งให้ GitHub Actions รัน Workflow เปลี่ยนชื่อไฟล์ทันทีแบบ On-Demand"""
+    user_email = request.session.get("user_email")
+    if not user_email:
+        return RedirectResponse(url="/", status_code=303)
+
+    github_gw = get_github_gateway()
+    dispatched = github_gw.trigger_rename_now(user_email)
+
+    if dispatched:
+        request.session["success_msg"] = "ส่งคำสั่งเปลี่ยนชื่อไฟล์ทันทีเรียบร้อยแล้ว ระบบกำลังประมวลผลอยู่เบื้องหลัง กรุณารอสักครู่แล้วรีเฟรชหน้านี้"
+    else:
+        request.session["error_msg"] = "ไม่สามารถสั่งรันระบบเปลี่ยนชื่อไฟล์ได้ กรุณาตรวจสอบการตั้งค่า GitHub Actions หรือลองใหม่อีกครั้ง"
+
     referer = request.headers.get("referer", "/home")
     return RedirectResponse(url=referer, status_code=303)
